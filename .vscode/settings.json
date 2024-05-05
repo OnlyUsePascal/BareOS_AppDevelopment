@@ -1,0 +1,6 @@
+{
+  "files.associations": {
+    "*.desktop": "ini",
+    "uart0.h": "c"
+  }
+}
