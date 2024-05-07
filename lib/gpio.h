@@ -39,3 +39,9 @@
 #define GPIO_PUP_PDN_CNTRL_REG1    (* (volatile unsigned int*)(MMIO_BASE+0x002000E8))
 #define GPIO_PUP_PDN_CNTRL_REG2    (* (volatile unsigned int*)(MMIO_BASE+0x002000EC))
 #define GPIO_PUP_PDN_CNTRL_REG3    (* (volatile unsigned int*)(MMIO_BASE+0x002000F0))
+
+//Definition
+typedef unsigned char uint8_t;
+typedef unsigned int uint32_t;
+typedef unsigned short int uint16_t;
+typedef unsigned long int uint64_t;

@@ -1,4 +1,5 @@
 #include "../lib/cli.h"
+#include "../lib/data/data_vid.h"
 
 // calibrate cmd (trim space) then call suitable func
 void cli_processCmd(const char *cmd, int cmdSz){
@@ -86,6 +87,16 @@ void cli_img(){
 
 void cli_vid(){
   uart_puts("--> cli video!!\n");
+  
+  framebf_init(VID_WIDTH, VID_HEIGHT, VID_WIDTH, VID_HEIGHT);
+  // play video 3 times
+  for (int i = 0 ; i < 3 ; i++) {
+    for (int frame = 0; frame < epd_bitmap_allArray_LEN; frame++){
+      framebf_drawImg(0,0,VID_WIDTH, VID_HEIGHT, epd_bitmap_allArray[frame]);
+      wait_msec(62500);
+    }
+    wait_msec(1000000);
+  }
 }
 
 

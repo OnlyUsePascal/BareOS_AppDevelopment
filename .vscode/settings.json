@@ -1,6 +1,15 @@
 {
   "files.associations": {
     "*.desktop": "ini",
-    "uart0.h": "c"
+    "uart0.h": "c",
+    "font.h": "c",
+    "string.h": "c",
+    "def.h": "c",
+    "mbox.h": "c",
+    "utils.h": "c",
+    "framebf.h": "c",
+    "helper.h": "c",
+    "cli.h": "c",
+    "data_vid.h": "c"
   }
 }

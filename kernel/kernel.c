@@ -156,7 +156,7 @@ void main(){
   // intitialize UART
   uart_init();
   helper_welcome();
-
+  uart_puts(PROMPT);
   while(1) {
     cli();
   }

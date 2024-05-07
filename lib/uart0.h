@@ -160,4 +160,11 @@
 void uart_init();
 void uart_sendc(char c);
 char uart_getc();
+uint32_t uart_isReadByteReady();
+uint8_t uart_getcInstant();
 void uart_puts(char *s);
+
+// debug 
+void uart_hex(unsigned int d);
+void uart_hex_short(unsigned int num);
+void uart_dec(int num);
