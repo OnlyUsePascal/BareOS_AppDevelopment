@@ -97,7 +97,13 @@ void framebf_drawPixel(int x, int y, unsigned int attr) {
 
 
 void framebf_drawRect(int x1, int y1, int x2, int y2, uint32_t attr, int fill) {
-  
+  for (int y = y1; y <= y2; y++)
+    for (int x = x1; x <= x2; x++) {
+      if ((x == x1 || x == x2) || (y == y1 || y == y2))
+        framebf_drawPixel(x, y, attr);
+      else if (fill)
+        framebf_drawPixel(x, y, attr);
+    }
 }
 
 

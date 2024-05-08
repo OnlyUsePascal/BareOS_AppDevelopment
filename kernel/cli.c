@@ -36,6 +36,10 @@ void cli_processCmd(const char *cmd, int cmdSz){
     case FONT: 
       cli_font();
       break;
+    
+    case GAME:
+      cli_game();
+      break;
       
     default:
       uart_puts("Command not found!\n");
@@ -86,22 +90,29 @@ void cli_img(){
 
 
 void cli_vid(){
+  #ifdef FEAT_VID
   uart_puts("--> cli video!!\n");
   
-  framebf_init(VID_WIDTH, VID_HEIGHT, VID_WIDTH, VID_HEIGHT);
+  framebf_init(VID_W, VID_H, VID_W, VID_H);
   // play video 3 times
   for (int i = 0 ; i < 3 ; i++) {
     for (int frame = 0; frame < epd_bitmap_allArray_LEN; frame++){
-      framebf_drawImg(0,0,VID_WIDTH, VID_HEIGHT, epd_bitmap_allArray[frame]);
-      wait_msec(62500);
+      framebf_drawImg(0,0,VID_W, VID_H, epd_bitmap_allArray[frame]);
+      wait_msec(37250);
     }
     wait_msec(1000000);
   }
+  #endif
 }
 
 
 void cli_font(){
   uart_puts("--> cli font!!\n");
+}
+
+
+void cli_game(){
+  game_enter();
 }
 
 
