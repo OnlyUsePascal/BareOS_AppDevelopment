@@ -10,6 +10,7 @@
     "framebf.h": "c",
     "helper.h": "c",
     "cli.h": "c",
-    "data_vid.h": "c"
+    "data_vid.h": "c",
+    "vid.h": "c"
   }
 }

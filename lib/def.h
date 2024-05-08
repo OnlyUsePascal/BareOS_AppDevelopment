@@ -16,6 +16,11 @@ extern const char *fgColorList[];
 extern const int cmdListSz;
 extern const int colorListSz;
 
-enum Cmd {HELP, CLEAR, IMAGE, VIDEO, FONT};
+enum Cmd {HELP, CLEAR, IMAGE, VIDEO, FONT, GAME};
+
+#define FEAT_IMG
+// #define FEAT_VID
+#define FEAT_FONT
+#define FEAT_GAME
 
 #endif
