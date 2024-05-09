@@ -1,6 +1,7 @@
 #include "../lib/font.h"
-#include "../lib/data/data_font.h"
 #include "../lib/utils.h"
+#include "../lib/framebf.h"
+#include "../lib/data/data_font.h"
 
 /* Functions to display text on the screen */
 void font_drawChar(int x, int y, char ch, unsigned int attr, int zoom) {
