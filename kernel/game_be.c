@@ -4,10 +4,15 @@
 #include "../lib/framebf.h"
 #include "../lib/font.h"
 #include "../lib/def.h"
+#include "../lib/util_str.h"
 #include "../lib/data/game/maze.h"
+#include "../lib/data/game/maze_state.h"
 #include "../lib/data/game/player.h"
 
 // ===== BACK-END =====
+const char directionKey[] = {'w', 'a', 's', 'd'};
+const int yOffset[] = {-1, 0, 1, 0};
+const int xOffset[] = {0, -1, 0, 1};
 
 void game_enter(){
   // init
@@ -44,14 +49,51 @@ void game_enter(){
 
 
 void game_start(){
-  // MAP AREA = (EDGE SZ * 2 + 1)^2
+  int characterSz = 20;
+  Position playerPos = {0, 5}; 
+
   uart_puts("Starting Game...\n");
   clearScreen();
   framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
-  int characterSz = 20;
   drawAsset(0 + (MAZE_SZ_CELL_PIXEL - characterSz) / 2, 
             MAZE_SZ_CELL_PIXEL * (MAZE_SZ_CELL / 2) + (MAZE_SZ_CELL_PIXEL - characterSz) / 2, 
             characterSz, characterSz, bitmap_player); 
+  
+  // movement 
+  while (1) {
+    uart_puts("---\n");
+    char c = uart_getc();
+    debugPos(playerPos);
+    
+    if (c == 27) {
+      //TODO: temporary escape to menu
+    } else {
+      //TODO: movement
+      Direction dir = -1;
+      for (int i = 0; i < 4; i++){
+        if (directionKey[i] == c){
+          dir = i;
+          break;
+        }      
+      }
+      
+      if (dir == -1) continue; 
+      Position posTmp = {playerPos.posX + xOffset[dir], playerPos.posY + yOffset[dir]};
+      uart_puts("> "); debugPos(posTmp);
+      
+      if (posTmp.posX < 0 || posTmp.posY < 0) continue;
+      //TODO: need update with level
+      int mazeState = bitmap_mazeState[MAZE_SZ_CELL * posTmp.posY + posTmp.posX];
+      str_debug_num(mazeState);
+      if (mazeState == 0) {
+        str_debug("hit wall!");
+        continue;
+      } 
+      updatePos(&playerPos, posTmp);
+    }
+    
+  }            
+  
 }
 
 
@@ -75,3 +117,12 @@ void game_exit(){
 }
 
 // ===== MAIN AREA =====
+void updatePos(Position *des, Position src){
+  des->posX = src.posX;
+  des->posY = src.posY;
+}
+
+
+void debugPos(Position pos){
+  uart_puts("["); uart_dec(pos.posX); uart_puts(","); uart_dec(pos.posY); uart_puts("]\n");
+}
