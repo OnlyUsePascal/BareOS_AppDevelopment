@@ -11,6 +11,10 @@
     "helper.h": "c",
     "cli.h": "c",
     "data_vid.h": "c",
-    "vid.h": "c"
+    "vid.h": "c",
+    "util_str.h": "c",
+    "game.h": "c",
+    "game_be.h": "c",
+    "maze.h": "c"
   }
 }

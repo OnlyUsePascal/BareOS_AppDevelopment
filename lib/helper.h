@@ -1,5 +1,5 @@
-#include "def.h"
+#include "../lib/def.h"
 
 void helper_welcome();
 void helper_generic();
-void helper_specific(enum Cmd);
+void helper_specific(enum Cmd cmdIdx);
