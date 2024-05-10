@@ -1,0 +1,8 @@
+//
+// Created by tsogp on 5/11/24.
+//
+
+#ifndef BAREOS_APPDEVELOPMENT_MATH_H
+#define BAREOS_APPDEVELOPMENT_MATH_H
+
+#endif //BAREOS_APPDEVELOPMENT_MATH_H
