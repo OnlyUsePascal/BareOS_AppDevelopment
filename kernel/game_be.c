@@ -49,15 +49,15 @@ void game_enter(){
 
 
 void game_start(){
-  int characterSz = 20;
-  Position playerPos = {0, 5}; 
-
   uart_puts("Starting Game...\n");
+  Asset playerAsset = {ASSET_HIDDEN, ASSET_HIDDEN, PLAYER_SZ, PLAYER_SZ, bitmap_player};
+  Position playerPos = {0, 5}; 
+  
+  updateAssetPos(&playerAsset, (MAZE_SZ_CELL_PIXEL - PLAYER_SZ) / 2, 
+                        MAZE_SZ_CELL_PIXEL * (MAZE_SZ_CELL / 2) + (MAZE_SZ_CELL_PIXEL - PLAYER_SZ) / 2 );
   clearScreen();
   framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
-  drawAsset(0 + (MAZE_SZ_CELL_PIXEL - characterSz) / 2, 
-            MAZE_SZ_CELL_PIXEL * (MAZE_SZ_CELL / 2) + (MAZE_SZ_CELL_PIXEL - characterSz) / 2, 
-            characterSz, characterSz, bitmap_player); 
+  drawAsset(playerAsset);
   
   // movement 
   while (1) {
@@ -74,22 +74,25 @@ void game_start(){
         if (directionKey[i] == c){
           dir = i;
           break;
-        }      
+        }
       }
       
       if (dir == -1) continue; 
-      Position posTmp = {playerPos.posX + xOffset[dir], playerPos.posY + yOffset[dir]};
+      Position posTmp = {playerPos.posX, playerPos.posY};
+      updatePos(&posTmp, dir);
       uart_puts("> "); debugPos(posTmp);
       
       if (posTmp.posX < 0 || posTmp.posY < 0) continue;
-      //TODO: need update with level
+      //TODO: get map state base on its level
       int mazeState = bitmap_mazeState[MAZE_SZ_CELL * posTmp.posY + posTmp.posX];
       str_debug_num(mazeState);
       if (mazeState == 0) {
         str_debug("hit wall!");
         continue;
       } 
-      updatePos(&playerPos, posTmp);
+      
+      updatePos(&playerPos, dir);
+      drawMovement(&playerAsset, dir);
     }
     
   }            
@@ -117,9 +120,9 @@ void game_exit(){
 }
 
 // ===== MAIN AREA =====
-void updatePos(Position *des, Position src){
-  des->posX = src.posX;
-  des->posY = src.posY;
+void updatePos(Position *des, Direction dir){
+  des->posX += xOffset[dir];
+  des->posY += yOffset[dir];
 }
 
 
