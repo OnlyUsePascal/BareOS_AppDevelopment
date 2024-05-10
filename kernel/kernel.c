@@ -4,9 +4,9 @@
 #include "../lib/helper.h"
 #include "../lib/utils.h"
 #include "../lib/game_be.h"
+#include "../lib/font.h"
+// #include "../lib/data/data_font.h"
 #include "../lib/data/data_vid.h"
-
-
 
 
 
@@ -273,6 +273,25 @@ void cli_vid(){
 
 void cli_font(){
   uart_puts("--> cli font!!\n");
+  
+  const int fontW = 900, fontH = 600;
+  const int OFFSET = 250;
+  framebf_init(fontW, fontH, fontW, fontH);
+  
+  // font_drawString(fontW / 2 - OFFSET, 100, "GROUP: NARUTO", 0xFFFF00, 5);
+  // font_drawString(fontW / 2 - OFFSET + 20, 200, "NGUYEN DANG HUAN      - S3927467", 0x00FFFF, 2);
+  // font_drawString(fontW / 2 - OFFSET + 20, 250, "PHAM XUAN DAT         - S3927188", 0x000FFA, 2);
+  // font_drawString(fontW / 2 - OFFSET + 20, 300, "TRUONG VO THIEN NHAN  - S3929215", 0xE4D00A, 2);
+  // font_drawString(fontW / 2 - OFFSET + 20, 350, "PAVEL POTEMKIN        - S3963284", 0x7FFFD4, 2);
+  
+  font2_drawString(fontW / 2 - OFFSET, 100, "GROUP: NARUTO", 0xFFFF00, 5);
+  font2_drawString(fontW / 2 - OFFSET + 20, 200, "NGUYEN DANG HUAN      - S3927467", 0x00FFFF, 2);
+  font2_drawString(fontW / 2 - OFFSET + 20, 250, "PHAM XUAN DAT         - S3927188", 0x000FFA, 2);
+  font2_drawString(fontW / 2 - OFFSET + 20, 300, "TRUONG VO THIEN NHAN  - S3929215", 0xE4D00A, 2);
+  font2_drawString(fontW / 2 - OFFSET + 20, 350, "PAVEL POTEMKIN        - S3963284", 0x7FFFD4, 2);
+  
+  // font2_drawChar(100, 100, 'N', 0xFFFF00, 50);
+  wait_msec(1000000);
 }
 
 
