@@ -1,8 +1,10 @@
-//
-// Created by tsogp on 5/11/24.
-//
-
 #ifndef BAREOS_APPDEVELOPMENT_MATH_H
 #define BAREOS_APPDEVELOPMENT_MATH_H
+
+#include "lib/gpio.h"
+
+uint64_t min_ul(const uint64_t a, const uint64_t b);
+long min_l(const long a, const long b);
+uint32_t abs(const long num);
 
 #endif //BAREOS_APPDEVELOPMENT_MATH_H

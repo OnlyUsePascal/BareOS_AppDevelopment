@@ -3,10 +3,16 @@
 
 #include "lib/gpio.h"
 
-typedef struct image {
-    const uint64_t *data, w, h;
-} image;
+#define STEP 10
 
-void show_picture(const image *img);
+typedef enum direction {
+    UP = 'w',
+    DOWN = 's',
+    LEFT = 'a',
+    RIGHT = 'd'
+} direction;
+
+extern void draw_picture(const uint64_t *img, const uint64_t w, const uint64_t h);
+extern void move_picture(const direction d);
 
 #endif
