@@ -262,7 +262,7 @@ void cli_vid(){
   for (int i = 0 ; i < 2 ; i++) {
     for (int frame = 0; frame < epd_bitmap_allArray_LEN; frame++){
       framebf_drawImg(0,0,VID_W, VID_H, epd_bitmap_allArray[frame]);
-      wait_msec(37250);
+      wait_msec(36250);
     }
     wait_msec(1000000);
   }

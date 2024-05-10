@@ -67,6 +67,7 @@ void game_start(){
     
     if (c == 27) {
       //TODO: temporary escape to menu
+      
     } else {
       //TODO: movement
       Direction dir = -1;
