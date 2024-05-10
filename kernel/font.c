@@ -1,4 +1,6 @@
 #include "../lib/font.h"
+#include "../lib/utils.h"
+#include "../lib/framebf.h"
 #include "../lib/data/data_font.h"
 #include "../lib/data/data_font2.h"
 #include "../lib/utils.h"

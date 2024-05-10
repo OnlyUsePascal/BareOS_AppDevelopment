@@ -1,4 +1,3 @@
-#include "framebf.h"
 
 void font_drawChar(int x, int y, char ch, unsigned int attr, int zoom);
 void font_drawString(int x, int y, char *str, unsigned int attr, int zoom);

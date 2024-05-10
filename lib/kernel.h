@@ -1,9 +1,7 @@
-#include "helper.h"
-#include "utils.h"
-#include "framebf.h"
-#include "game.h"
+#ifndef KERNEL_H
+#define KERNEL_H
 
-
+void cli();
 void cli_processCmd(const char *cmd, int cmdSz);
 enum Cmd cli_findCmd(const char *cmd);
 void cli_help(const char *cmd);
@@ -16,7 +14,4 @@ void cli_game();
 #define VID_H 480
 
 
-
-
-
-
+#endif
