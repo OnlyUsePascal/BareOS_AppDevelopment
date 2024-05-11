@@ -3,7 +3,7 @@
 GCCFLAGS = -Wall -O2 -ffreestanding -nostdinc -nostdlib
 DIR_BUI = build
 DIR_KER = kernel
-DIR_ROOT = $(shell pwd)
+DIR_ROOT = $(cd)
 CFILES = $(wildcard $(DIR_KER)/*.c)
 OFILES = $(CFILES:$(DIR_KER)/%.c=$(DIR_BUI)/%.o)
 
