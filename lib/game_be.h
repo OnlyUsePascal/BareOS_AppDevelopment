@@ -44,10 +44,10 @@ typedef struct {
 };
 
 typedef enum {
-  UP, 
-  LEFT, 
-  DOWN, 
-  RIGHT
+    UP = 'w',
+    DOWN = 's',
+    LEFT = 'a',
+    RIGHT = 'd'
 } Direction;
 
 extern const int xOffset[];

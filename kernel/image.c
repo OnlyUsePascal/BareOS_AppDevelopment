@@ -35,7 +35,7 @@ extern void draw_picture(const uint64_t *img, const uint64_t w, const uint64_t h
         framebf_drawImg(w_offset, h_offset, w, h, img_data);
 }
 
-extern void move_picture(const direction d) {
+extern void move_picture(const Direction d) {
         bool checked_bounds = true;
         switch (d) {
                 case UP: {
