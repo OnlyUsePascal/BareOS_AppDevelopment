@@ -1,6 +1,10 @@
+#ifndef GAME_BE_H
+#define GAME_BE_H
 
 #define MAZE_SZ_CELL 11 
 #define MAZE_SZ_CELL_PIXEL 40 
+#define PLAYER_SZ 20
+
 
 typedef struct {
   int level;
@@ -39,6 +43,16 @@ typedef struct {
   int speed; // ???
 };
 
+typedef enum {
+  UP, 
+  LEFT, 
+  DOWN, 
+  RIGHT
+} Direction;
+
+extern const int xOffset[];
+extern const int yOffset[];
+extern const char directionKey[];
 
 void game_enter();
 void game_start();
@@ -49,3 +63,5 @@ void clearScreen();
 
 
 
+
+#endif

@@ -3,6 +3,8 @@
 #include "../lib/game_be.h"
 #include "../lib/utils.h"
 #include "../lib/def.h"
+#include "../lib/framebf.h"
+#include "../lib/data/game/maze.h"
 
 void clearScreen(){
   framebf_drawRect(0, 0, GAME_W, GAME_H, MENU_BACKGND, 1);
@@ -43,29 +45,57 @@ int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz) {
 }
 
 
-
-void drawAsset(int x, int y, int w, int h, const uint64_t *image){
-  str_debug_num(x);
-  str_debug_num(y);
- 
-  for (int i = x, posX = 0; posX < w; i++, posX++) {
-    for (int j = y, posY = 0; posY < h; j++, posY++) {
-      if (image[posX + posY * w] != 0) 
-        framebf_drawPixel(i, j, image[posX + posY * w]); 
+void drawAsset(Asset *asset) {
+  for (int i = asset->posX, posX = 0; posX < asset->width; i++, posX++){
+    for (int j = asset->posY, posY = 0; posY < asset->height; j++, posY++){
+      if (asset->bitmap[posX + posY * asset->width] != 0)
+        framebf_drawPixel(i, j, asset->bitmap[posX + posY * asset->width]);
     }
   }
 }
 
 
+void removeAsset(Asset *asset) {
+  //replace with maze pixel
+  // TODO: move to storage files
+  Asset maze = {0,0, MAZE_SZ_CELL * MAZE_SZ_CELL_PIXEL, 
+                  MAZE_SZ_CELL * MAZE_SZ_CELL_PIXEL, bitmap_maze};
+                  
+  for (int i = asset->posX, posX = 0; posX < asset->width; i++, posX++){
+    for (int j = asset->posY, posY = 0; posY < asset->height; j++, posY++){
+      framebf_drawPixel(i, j, maze.bitmap[i + j * maze.width]);
+    } 
+  }  
+}
+
+
+void drawMovement(Asset *asset, Direction dir){
+  // TODO: 1 shot move, then 4-shot move
+  int step = 1;
+  int stepOffset = MAZE_SZ_CELL_PIXEL / step;
+
+  // // middle step
+  // for (int i = 0; i < step-1; i++) {
+  //   // remove current -> draw at temp pos
+    
+  // }
+  
+  // // beware indivisible case, draw at the last frame
+  
+  //1-shot move
+  removeAsset(asset);
+  updateAssetPos(asset, asset->posX + xOffset[dir] * stepOffset, 
+                        asset->posY + yOffset[dir] * stepOffset);
+  drawAsset(asset);
+}
+  
 
 
 
-
-
-
-
-
-
+void updateAssetPos(Asset *asset, int x, int y) {
+  asset->posX = x;
+  asset->posY = y;
+}
 
 
 
