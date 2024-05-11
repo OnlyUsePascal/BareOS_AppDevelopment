@@ -1,3 +1,6 @@
+#ifndef UTIL_STR
+#define UTIL_STR
+
 #include "def.h"
 
 int str_cmp(const char *str1, const char *str2);
@@ -12,3 +15,5 @@ void str_debug_arr(char arr[][CMD_SZ], int sz);
 void str_debug_float(float f);
 int str_len(const char *str);
 int str_is_prefix(const char *str1, const char *str2);
+
+#endif

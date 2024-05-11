@@ -1,6 +1,6 @@
 // === FRONT-END ===
 #include "../lib/game_fe.h"
-#include "../lib/game_be.h";
+#include "../lib/game_be.h"
 #include "../lib/utils.h"
 #include "../lib/def.h"
 #include "../lib/framebf.h"
