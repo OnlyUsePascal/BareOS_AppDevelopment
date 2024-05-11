@@ -20,7 +20,7 @@ $(DIR_BUI)/kernel8.img: $(DIR_BUI)/boot.o $(OFILES)
 	aarch64-none-elf-objcopy -O binary $(DIR_BUI)/kernel8.elf $@
 
 clean:
-	rm -rf  .\$(DIR_BUI)\*
+	del  .\$(DIR_BUI)\*
 
 # Run emulation with QEMU
 run: 
