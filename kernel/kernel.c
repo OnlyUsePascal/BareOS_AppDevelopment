@@ -255,7 +255,7 @@ void cli_img(){
 
         char ch = uart_getc();
         while (true) {
-                if (ch != UP && ch != DOWN && ch != LEFT && ch != RIGHT) {
+                if (ch != IMG_UP && ch != IMG_DOWN && ch != IMG_LEFT && ch != IMG_RIGHT) {
                         break;
                 }
 
