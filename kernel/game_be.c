@@ -25,25 +25,29 @@ void game_enter(){
   int menuPosX = 150, menuPosY = 200, yOffset = 50;
   char *opts[] = {"Start", "Continue", "How To Play?", "Exit"};
   int optSz = sizeof(opts) / sizeof(opts[0]);
-  drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
-
-  int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz);  
-  switch (optIdx) {
-    case 0: //start
-      game_start();
-      break;
+  
+  while (1) {
+    drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
+    int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz);  
     
-    case 1: //continue
-      game_continue();
-      break;
+    switch (optIdx) {
+      case 0: //start
+        game_start();
+        break;
+      
+      case 1: //continue
+        game_continue();
+        break;
+      
+      case 2: //help
+        game_help();
+        break;
+      
+      case 3: //exit
+        game_exit();
+        return;
+    }
     
-    case 2: //help
-      game_help();
-      break;
-    
-    case 3: //exit
-      game_exit();
-      return;
   }
 }
 
@@ -67,6 +71,8 @@ void game_start(){
     
     if (c == 27) {
       //TODO: temporary escape to menu
+      clearScreen();
+      break;      
     } else {
       //TODO: movement
       Direction dir = -1;

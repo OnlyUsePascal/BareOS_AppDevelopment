@@ -110,7 +110,7 @@ void framebf_drawRect(int x1, int y1, int x2, int y2, uint32_t attr, int fill) {
 
 
 void framebf_drawImg(int x, int y, int w, int h, const uint64_t *image) {
-  for (int i = x, posX = 0; posX < w && i < GAME_W; i++, posX++) {
+  for (int i = x, posX = 0; posX < w; i++, posX++) {
     for (int j = y, posY = 0; posY < h; j++, posY++) {
         framebf_drawPixel(i, j, image[posX + posY * w]);
     }

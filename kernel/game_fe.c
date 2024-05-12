@@ -70,22 +70,25 @@ void removeAsset(Asset *asset) {
 
 
 void drawMovement(Asset *asset, Direction dir){
-  // TODO: 1 shot move, then 4-shot move
-  int step = 1;
+  // TODO: animation with frame
+  int step = 3;
   int stepOffset = MAZE_SZ_CELL_PIXEL / step;
-
-  // // middle step
-  // for (int i = 0; i < step-1; i++) {
-  //   // remove current -> draw at temp pos
-    
-  // }
+  int posXFinal = asset->posX + xOffset[dir] * MAZE_SZ_CELL_PIXEL;
+  int posYFinal = asset->posY + yOffset[dir] * MAZE_SZ_CELL_PIXEL;
   
-  // // beware indivisible case, draw at the last frame
+  // walk the middle
+  for (int i = 0 ; i < step - 1; i++){
+    removeAsset(asset);
+    updateAssetPos(asset, asset->posX + xOffset[dir] * stepOffset, 
+                          asset->posY + yOffset[dir] * stepOffset);
+    drawAsset(asset);
+    // wait_msec(37250);
+    wait_msec(62500);
+  }
   
-  //1-shot move
+  // walk the last step
   removeAsset(asset);
-  updateAssetPos(asset, asset->posX + xOffset[dir] * stepOffset, 
-                        asset->posY + yOffset[dir] * stepOffset);
+  updateAssetPos(asset, posXFinal, posYFinal);
   drawAsset(asset);
 }
   
