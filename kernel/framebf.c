@@ -1,6 +1,6 @@
 #include "../lib/framebf.h"
-#include "lib/game_fe.h"
-#include "lib/math.h"
+#include "../lib/game_fe.h"
+#include "../lib/math.h"
 
 // Use RGBA32 (32 bits for each pixel)
 #define COLOR_DEPTH 32

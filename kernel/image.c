@@ -1,10 +1,10 @@
-#include "lib/image.h"
-#include "lib/framebf.h"
-#include "lib/uart0.h"
-#include "lib/game_be.h"
-#include "lib/util_str.h"
-#include "lib/game_fe.h"
-#include "lib/math.h"
+#include "../lib/image.h"
+#include "../lib/framebf.h"
+#include "../lib/uart0.h"
+#include "../lib/game_be.h"
+#include "../lib/util_str.h"
+#include "../lib/game_fe.h"
+#include "../lib/math.h"
 
 static const uint64_t *img_data;
 static long w_offset = 0, h_offset = 0, w_img, h_img;

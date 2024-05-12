@@ -1,7 +1,7 @@
 #ifndef BAREOS_APPDEVELOPMENT_IMAGE_H
 #define BAREOS_APPDEVELOPMENT_IMAGE_H
 
-#include "lib/gpio.h"
+#include "gpio.h"
 
 #define STEP 10
 

@@ -1,4 +1,4 @@
-#include "lib/math.h"
+#include "../lib/math.h"
 
 uint64_t min_ul(const uint64_t a, const uint64_t b) {
         return (a < b) ? a : b;

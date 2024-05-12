@@ -7,8 +7,8 @@
 #include "../lib/font.h"
 // #include "../lib/data/data_font.h"
 #include "../lib/data/data_vid.h"
-#include "lib/image.h"
-#include "lib/data/images/sample_pic.h"
+#include "../lib/image.h"
+#include "../lib/data/images/sample_pic.h"
 
 
 void cli() {
