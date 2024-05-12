@@ -1,4 +1,6 @@
 #include "../lib/framebf.h"
+#include "../lib/game_fe.h"
+#include "../lib/math.h"
 
 // Use RGBA32 (32 bits for each pixel)
 #define COLOR_DEPTH 32
@@ -114,5 +116,4 @@ void framebf_drawImg(int x, int y, int w, int h, const uint64_t *image) {
     }
   }
 }
-
 

@@ -7,7 +7,8 @@
 #include "../lib/font.h"
 // #include "../lib/data/data_font.h"
 #include "../lib/data/data_vid.h"
-
+#include "../lib/image.h"
+#include "../lib/data/images/sample_pic.h"
 
 
 void cli() {
@@ -186,6 +187,7 @@ void cli_processCmd(const char *cmd, int cmdSz){
     
     case IMAGE:
       cli_img();
+
       break;
       
     case VIDEO:
@@ -248,7 +250,19 @@ void cli_clrscr() {
 
 
 void cli_img(){
-  uart_puts("--> cli image!!\n");
+        uart_puts("--> cli image!!\n");
+        draw_picture(moved_image, MOVED_IMAGE_WIDTH, MOVED_IMAGE_HEIGHT);
+
+        char ch = uart_getc();
+        while (true) {
+                if (ch != IMG_UP && ch != IMG_DOWN && ch != IMG_LEFT && ch != IMG_RIGHT) {
+                        break;
+                }
+
+                move_picture(ch);
+                ch = uart_getc();
+        }
+
 }
 
 

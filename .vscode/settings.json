@@ -17,6 +17,8 @@
     "game_be.h": "c",
     "maze.h": "c",
     "data_font.h": "c",
-    "data_font2.h": "c"
+    "data_font2.h": "c",
+    "game_fe.h": "c",
+    "math.h": "c"
   }
 }

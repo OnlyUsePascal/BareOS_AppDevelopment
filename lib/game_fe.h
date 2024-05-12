@@ -1,3 +1,5 @@
+#ifndef GAME_FE
+#define GAME_FE
 
 #define GAME_W 600
 #define GAME_H 600
@@ -28,9 +30,4 @@ int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz);
 
 // ANIMATION, FRAME INTERVAL, 
 
-
-
-
-
-
-
+#endif
