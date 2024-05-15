@@ -5,7 +5,6 @@
 #define MAZE_SZ_CELL_PIXEL 40 
 #define PLAYER_SZ 20
 
-
 typedef struct {
   int level;
   int pathColor;

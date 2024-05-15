@@ -24,9 +24,10 @@ typedef struct {
 void clearScreen();
 void drawMenu(int posX, int posY, int yOffset, char *opts[], int optSz);
 int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz);
-// void updateAssetPos(Asset *asset, int x, int y);
-// void drawMovement(Asset *asset, Direction dir);
-// void drawAsset(int x, int y, int w, int h, const uint64_t *image);
+//void updateAssetPos(Asset *asset, int x, int y);
+//void drawMovement(Asset *asset, Direction dir);
+//void drawAsset(int x, int y, int w, int h, const uint64_t *image);
+void drawFOV(const Asset *asset);
 
 // ANIMATION, FRAME INTERVAL, 
 
