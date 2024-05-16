@@ -9,6 +9,7 @@
 #include "../lib/data/game/maze_state.h"
 #include "../lib/data/game/player.h"
 #include "lib/data/game/fov.h"
+#include "lib/gpio.h"
 
 // ===== BACK-END =====
 const char directionKey[] = {'w', 'a', 's', 'd'};
@@ -52,6 +53,16 @@ void game_enter() {
     }
 }
 
+void render_scene(const Asset *fovAsset, const Asset *playerAsset, const bool isFOVShown) {
+    if (!isFOVShown) {
+        framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
+    } else {
+        clearScreen();
+        drawFOV( fovAsset);
+    }
+
+    drawAsset(playerAsset);
+}
 
 void game_start() {
     uart_puts("Starting Game...\n");
@@ -59,14 +70,21 @@ void game_start() {
     Asset fovAsset = {ASSET_HIDDEN, ASSET_HIDDEN, FOV_SZ, FOV_SZ, bitmap_fov};
     Position playerPos = {0, 5};
 
+#ifdef DEBUG
+    bool isFOVShown = false;
+#endif
+
     updateAssetPos(&playerAsset, (MAZE_SZ_CELL_PIXEL - PLAYER_SZ) / 2,
                    MAZE_SZ_CELL_PIXEL * (MAZE_SZ_CELL / 2) + (MAZE_SZ_CELL_PIXEL - PLAYER_SZ) / 2);
     updateAssetPos(&fovAsset, (MAZE_SZ_CELL_PIXEL - PLAYER_SZ) / 2,
                    MAZE_SZ_CELL_PIXEL * (MAZE_SZ_CELL / 2) + (MAZE_SZ_CELL_PIXEL - PLAYER_SZ) / 2);
     clearScreen();
-//  framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
-    drawFOV((const Asset *) &fovAsset);
-    drawAsset(playerAsset);
+
+#ifdef DEBUG
+    render_scene((const Asset *) &fovAsset, (const Asset *) &playerAsset, isFOVShown);
+#else
+    render_scene((const Asset *) &fovAsset, (const Asset *) &playerAsset, true);
+#endif
 
     // movement
     while (1) {
@@ -78,7 +96,15 @@ void game_start() {
             //TODO: temporary escape to menu
             clearScreen();
             break;
-        } else {
+        }
+#ifdef DEBUG
+        else if (c == 'k') {
+            uart_puts("here");
+            render_scene((const Asset *) &fovAsset, (const Asset *) &playerAsset, (isFOVShown = !isFOVShown));
+            uart_dec(isFOVShown);
+        }
+#endif
+        else {
             //TODO: movement
             Direction dir = -1;
             for (int i = 0; i < 4; i++) {
@@ -106,7 +132,13 @@ void game_start() {
             }
 
             updatePos(&playerPos, dir);
+#ifdef DEBUG
+            if (isFOVShown) {
+                drawFOVMovement(&fovAsset, dir);
+            }
+#else
             drawFOVMovement(&fovAsset, dir);
+#endif
             drawMovement(&playerAsset, dir);
         }
 

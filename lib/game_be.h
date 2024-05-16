@@ -60,6 +60,10 @@ void game_help();
 void game_exit();
 void clearScreen();
 
+#ifdef DEBUG
+void cli_toggle_fov();
+#endif
+
 
 
 

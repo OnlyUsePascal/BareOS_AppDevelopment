@@ -47,7 +47,7 @@ int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz) {
 }
 
 
-void drawAsset(Asset *asset) {
+void drawAsset(const Asset *asset) {
     for (int i = asset->posX, posX = 0; posX < asset->width; i++, posX++) {
         for (int j = asset->posY, posY = 0; posY < asset->height; j++, posY++) {
             if (asset->bitmap[posX + posY * asset->width] != 0)
