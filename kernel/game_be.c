@@ -54,11 +54,12 @@ void game_enter(){
 
 void game_start(){
   uart_puts("Starting Game...\n");
-  Asset playerAsset = {ASSET_HIDDEN, ASSET_HIDDEN, PLAYER_SZ, PLAYER_SZ, bitmap_player};
+  Asset playerAsset = {(MAZE_SZ_CELL_PIXEL - PLAYER_SZ) / 2, 
+                        MAZE_SZ_CELL_PIXEL * (MAZE_SZ_CELL / 2) 
+                        + (MAZE_SZ_CELL_PIXEL - PLAYER_SZ) / 2, 
+                        PLAYER_SZ, PLAYER_SZ, bitmap_player};
   Position playerPos = {0, 5}; 
   
-  updateAssetPos(&playerAsset, (MAZE_SZ_CELL_PIXEL - PLAYER_SZ) / 2, 
-                        MAZE_SZ_CELL_PIXEL * (MAZE_SZ_CELL / 2) + (MAZE_SZ_CELL_PIXEL - PLAYER_SZ) / 2 );
   clearScreen();
   framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
   drawAsset(playerAsset);
