@@ -41,7 +41,7 @@ typedef struct {
   Position pos;
   Light light;
   int speed; // ???
-};
+} Player;
 
 typedef enum {
   UP,
