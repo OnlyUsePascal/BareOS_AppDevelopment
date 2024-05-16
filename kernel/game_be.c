@@ -8,11 +8,15 @@
 #include "../lib/data/game/maze.h"
 #include "../lib/data/game/maze_state.h"
 #include "../lib/data/game/player.h"
+#include "../lib/data/game/item.h"
+
+
 
 // ===== BACK-END =====
 const char directionKey[] = {'w', 'a', 's', 'd'};
 const int yOffset[] = {-1, 0, 1, 0};
 const int xOffset[] = {0, -1, 0, 1};
+
 
 void game_enter(){
   // init
@@ -54,21 +58,26 @@ void game_enter(){
 
 void game_start(){
   uart_puts("Starting Game...\n");
-  Asset playerAsset = {(MAZE_SZ_CELL_PIXEL - PLAYER_SZ) / 2, 
-                        MAZE_SZ_CELL_PIXEL * (MAZE_SZ_CELL / 2) 
-                        + (MAZE_SZ_CELL_PIXEL - PLAYER_SZ) / 2, 
-                        PLAYER_SZ, PLAYER_SZ, bitmap_player};
-  Position playerPos = {0, 5}; 
+  Asset playerAsset = {ASSET_HIDDEN, ASSET_HIDDEN, PLAYER_SZ, PLAYER_SZ, bitmap_player};
+  Position playerPos = {0, MAZE_SZ_CELL / 2}; 
   
+  Asset bombAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_bomb};
+  Position bombPos = {1, 9};
+  Item bomb = {&bombAsset, &bombPos, BOMB};
+  
+  posBeToFe(&playerPos, &playerAsset);
+  posBeToFe(&bombPos, &bombAsset);
+
   clearScreen();
   framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
-  drawAsset(playerAsset);
-
-
-  float cur_darken = 1.0f; 
-  float darken_factor = 0.8f; 
-  float cur_lighten = 1.0f; 
-  float lighten_factor = 1.25f; 
+  
+  drawAsset(&playerAsset);
+  drawAsset(&bombAsset);
+  
+  
+  // TODO: split to other functions
+ 
+  
   // movement 
   while (1) {
     uart_puts("---\n");
@@ -76,62 +85,9 @@ void game_start(){
     debugPos(playerPos);
     
     if(c == 'o'){
-      cur_darken *= darken_factor;
-      for (int i = 0; i < MAZE_SZ; i++){
-        for (int j = 0; j < MAZE_SZ; j++){
-
-          unsigned long color = bitmap_maze[i + j * MAZE_SZ];
-          // uart_hex(color); uart_puts("\n");
-          unsigned long r = (color & 0xFF0000) >> 16;
-          unsigned long g = (color & 0x00FF00) >> 8;
-          unsigned long b = (color & 0x0000FF);
-
-          // Darken the RGB values       
-          r = (unsigned long)(r * cur_darken);
-          g = (unsigned long)(g * cur_darken);
-          b = (unsigned long)(b * cur_darken);
-
-          // Ensure the values are within the valid range
-          if (r < 0) r = 0;
-          if (g < 0) g = 0;
-          if (b < 0) b = 0;
-
-          // Combine the RGB values back into a single color value
-          unsigned long new_color = (r << 16) | (g << 8) | b;
-          // uart_dec(new_color); uart_puts("\n");
-          framebf_drawPixel(i, j, new_color);
-        }
-      }
+      moreScreenDarkness();
     }else if(c == 'p'){
-      for (int i = 0; i < MAZE_SZ; i++){
-        for (int j = 0; j < MAZE_SZ; j++){
-
-          unsigned long color = bitmap_maze[i + j * MAZE_SZ];
-          // uart_hex(color); uart_puts("\n");
-          unsigned long r = (color & 0xFF0000) >> 16;
-          unsigned long g = (color & 0x00FF00) >> 8;
-          unsigned long b = (color & 0x0000FF);
-
-          // Darken the RGB values       
-          r = (unsigned long)(r * cur_lighten);
-          g = (unsigned long)(g * cur_lighten);
-          b = (unsigned long)(b * cur_lighten);
-
-          // Ensure the values are within the valid range
-          if (r < 0) r = 0;
-          if (g < 0) g = 0;
-          if (b < 0) b = 0;
-
-          // Combine the RGB values back into a single color value
-          unsigned long new_color = (r << 16) | (g << 8) | b;
-          // uart_dec(new_color); uart_puts("\n");
-          framebf_drawPixel(i, j, new_color);
-        }
-      }
-      // clearScreen();
-      // framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
-      // drawAsset(playerAsset);
-      // cur_darken = 0.8f;
+      resetScreenDarkness();
     }
     
     if (c == 27) {
@@ -189,7 +145,7 @@ void game_help(){
 void game_exit(){
   clearScreen();
   uart_puts("Exiting game...\n");
-  font_drawString(150, 150, "Ta reng Ta reng Ta reng", MENU_FOREGND, 2);
+  font_drawString(150, 150, "Ta reng Ta reng Ta reng", MENU_FOREGND, 2, 1);
 }
 
 // ===== MAIN AREA =====

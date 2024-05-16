@@ -2,8 +2,14 @@
 #define GAME_BE_H
 
 #define MAZE_SZ_CELL 11 
-#define MAZE_SZ_CELL_PIXEL 40 
-#define PLAYER_SZ 20
+
+typedef struct {
+  int posX; // x in maze
+  int posY; // y in maze
+  int width; 
+  int height; 
+  unsigned long *bitmap;
+} Asset; 
 
 
 typedef struct {
@@ -12,11 +18,13 @@ typedef struct {
   
 } Maze;
 
+
 typedef struct {
   int posX;
   int posY;
   
 } Position;
+
 
 typedef enum {
   TRAP,
@@ -26,10 +34,13 @@ typedef enum {
   COIN
 } ItemId;
 
+
 typedef struct {
-  Position pos;
+  Asset *asset;
+  Position *pos;
   ItemId id;
 } Item;
+
 
 typedef struct {
   int radius;
@@ -37,11 +48,13 @@ typedef struct {
   int fadingSpeed; // ???
 } Light;
 
+
 typedef struct {
   Position pos;
   Light light;
   int speed; // ???
 } Player;
+
 
 typedef enum {
   UP,
@@ -49,6 +62,7 @@ typedef enum {
   DOWN,
   RIGHT
 } Direction;
+
 
 extern const int xOffset[];
 extern const int yOffset[];

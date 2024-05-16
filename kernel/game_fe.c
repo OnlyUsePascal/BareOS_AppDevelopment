@@ -1,15 +1,19 @@
 // === FRONT-END ===
 #include "../lib/game_fe.h"
-#include "../lib/game_be.h"
 #include "../lib/utils.h"
 #include "../lib/def.h"
 #include "../lib/framebf.h"
 #include "../lib/data/game/maze.h"
 
+float cur_darken = 1.0f; 
+float darken_factor = 0.8f; 
+float cur_lighten = 1.0f; 
+float lighten_factor = 1.25f;
+
+
 void clearScreen(){
   framebf_drawRect(0, 0, GAME_W, GAME_H, MENU_BACKGND, 1);
 }
-
 
 
 void drawMenu(int posX, int posY, int spacing, char *opts[], int optSz){
@@ -17,7 +21,6 @@ void drawMenu(int posX, int posY, int spacing, char *opts[], int optSz){
     font_drawString(posX, posY + i * spacing, opts[i], MENU_FOREGND, 2);
   }
 }
-
 
 
 int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz) {
@@ -69,6 +72,69 @@ void removeAsset(Asset *asset) {
 }
 
 
+void moreScreenDarkness() {
+  cur_darken *= darken_factor;
+  for (int i = 0; i < MAZE_SZ; i++){
+    for (int j = 0; j < MAZE_SZ; j++){
+
+      unsigned long color = bitmap_maze[i + j * MAZE_SZ];
+      // uart_hex(color); uart_puts("\n");
+      unsigned long r = (color & 0xFF0000) >> 16;
+      unsigned long g = (color & 0x00FF00) >> 8;
+      unsigned long b = (color & 0x0000FF);
+
+      // Darken the RGB values       
+      r = (unsigned long)(r * cur_darken);
+      g = (unsigned long)(g * cur_darken);
+      b = (unsigned long)(b * cur_darken);
+
+      // Ensure the values are within the valid range
+      if (r < 0) r = 0;
+      if (g < 0) g = 0;
+      if (b < 0) b = 0;
+
+      // Combine the RGB values back into a single color value
+      unsigned long new_color = (r << 16) | (g << 8) | b;
+      // uart_dec(new_color); uart_puts("\n");
+      framebf_drawPixel(i, j, new_color);
+    }
+  }
+}
+
+
+void resetScreenDarkness() {
+  for (int i = 0; i < MAZE_SZ; i++){
+    for (int j = 0; j < MAZE_SZ; j++){
+
+      unsigned long color = bitmap_maze[i + j * MAZE_SZ];
+      // uart_hex(color); uart_puts("\n");
+      unsigned long r = (color & 0xFF0000) >> 16;
+      unsigned long g = (color & 0x00FF00) >> 8;
+      unsigned long b = (color & 0x0000FF);
+
+      // Darken the RGB values       
+      r = (unsigned long)(r * cur_lighten);
+      g = (unsigned long)(g * cur_lighten);
+      b = (unsigned long)(b * cur_lighten);
+
+      // Ensure the values are within the valid range
+      if (r < 0) r = 0;
+      if (g < 0) g = 0;
+      if (b < 0) b = 0;
+
+      // Combine the RGB values back into a single color value
+      unsigned long new_color = (r << 16) | (g << 8) | b;
+      // uart_dec(new_color); uart_puts("\n");
+      framebf_drawPixel(i, j, new_color);
+    }
+  }
+  // clearScreen();
+  // framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
+  // drawAsset(playerAsset);
+  // cur_darken = 0.8f;
+}
+
+
 void drawMovement(Asset *player, Direction dir){
   // TODO: animation with frame
   int step = 3;
@@ -93,12 +159,19 @@ void drawMovement(Asset *player, Direction dir){
 }
   
 
-
-
 void updateAssetPos(Asset *asset, int x, int y) {
   asset->posX = x;
   asset->posY = y;
 }
 
 
+void posBeToFe(Position *pos, Asset *asset){
+  asset->posX = pos->posX * MAZE_SZ_CELL_PIXEL + (MAZE_SZ_CELL_PIXEL - asset->width) / 2;
+  asset->posY = pos->posY * MAZE_SZ_CELL_PIXEL + (MAZE_SZ_CELL_PIXEL - asset->height) / 2;
+}
+
+
+void debugAsset(Asset asset){
+  uart_puts("["); uart_dec(asset.posX); uart_puts(","); uart_dec(asset.posY); uart_puts("]\n");
+}
 

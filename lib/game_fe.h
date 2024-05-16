@@ -1,3 +1,5 @@
+#include "../lib/game_be.h"
+
 #ifndef GAME_FE
 #define GAME_FE
 
@@ -8,26 +10,29 @@
 #define MAZE_SZ 440
 #define ASSET_HIDDEN -1
 
-// typedef struct {
-//   int posX;
-//   int posY;
-// } PositionDisplay;
+#define MAZE_SZ_CELL_PIXEL 40 
+#define PLAYER_SZ 20
+#define ITEM_SZ 20
 
-typedef struct {
-  int posX; // x in maze
-  int posY; // y in maze
-  int width; 
-  int height; 
-  unsigned long *bitmap;
-} Asset; 
 
 void clearScreen();
 void drawMenu(int posX, int posY, int yOffset, char *opts[], int optSz);
 int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz);
-// void updateAssetPos(Asset *asset, int x, int y);
-// void drawMovement(Asset *asset, Direction dir);
-// void drawAsset(int x, int y, int w, int h, const uint64_t *image);
 
-// ANIMATION, FRAME INTERVAL, 
+void drawAsset(Asset *asset);
+void removeAsset(Asset *asset);
+void drawMovement(Asset *asset, Direction dir);
+void updateAssetPos(Asset *asset, int x, int y);
+
+void posBeToFe(Position *pos, Asset *asset);
+void debugAsset(Asset asset);
+
+void resetScreenDarkness();
+void moreScreenDarkness();
+
+extern float cur_darken;
+extern float darken_factor;
+extern float cur_lighten;
+extern float lighten_factor;
 
 #endif
