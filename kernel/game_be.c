@@ -63,12 +63,76 @@ void game_start(){
   clearScreen();
   framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
   drawAsset(playerAsset);
-  
+
+
+  float cur_darken = 1.0f; 
+  float darken_factor = 0.8f; 
+  float cur_lighten = 1.0f; 
+  float lighten_factor = 1.25f; 
   // movement 
   while (1) {
     uart_puts("---\n");
     char c = uart_getc();
     debugPos(playerPos);
+    
+    if(c == 'o'){
+      cur_darken *= darken_factor;
+      for (int i = 0; i < MAZE_SZ; i++){
+        for (int j = 0; j < MAZE_SZ; j++){
+
+          unsigned long color = bitmap_maze[i + j * MAZE_SZ];
+          // uart_hex(color); uart_puts("\n");
+          unsigned long r = (color & 0xFF0000) >> 16;
+          unsigned long g = (color & 0x00FF00) >> 8;
+          unsigned long b = (color & 0x0000FF);
+
+          // Darken the RGB values       
+          r = (unsigned long)(r * cur_darken);
+          g = (unsigned long)(g * cur_darken);
+          b = (unsigned long)(b * cur_darken);
+
+          // Ensure the values are within the valid range
+          if (r < 0) r = 0;
+          if (g < 0) g = 0;
+          if (b < 0) b = 0;
+
+          // Combine the RGB values back into a single color value
+          unsigned long new_color = (r << 16) | (g << 8) | b;
+          // uart_dec(new_color); uart_puts("\n");
+          framebf_drawPixel(i, j, new_color);
+        }
+      }
+    }else if(c == 'p'){
+      for (int i = 0; i < MAZE_SZ; i++){
+        for (int j = 0; j < MAZE_SZ; j++){
+
+          unsigned long color = bitmap_maze[i + j * MAZE_SZ];
+          // uart_hex(color); uart_puts("\n");
+          unsigned long r = (color & 0xFF0000) >> 16;
+          unsigned long g = (color & 0x00FF00) >> 8;
+          unsigned long b = (color & 0x0000FF);
+
+          // Darken the RGB values       
+          r = (unsigned long)(r * cur_lighten);
+          g = (unsigned long)(g * cur_lighten);
+          b = (unsigned long)(b * cur_lighten);
+
+          // Ensure the values are within the valid range
+          if (r < 0) r = 0;
+          if (g < 0) g = 0;
+          if (b < 0) b = 0;
+
+          // Combine the RGB values back into a single color value
+          unsigned long new_color = (r << 16) | (g << 8) | b;
+          // uart_dec(new_color); uart_puts("\n");
+          framebf_drawPixel(i, j, new_color);
+        }
+      }
+      // clearScreen();
+      // framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
+      // drawAsset(playerAsset);
+      // cur_darken = 0.8f;
+    }
     
     if (c == 27) {
       //TODO: temporary escape to menu
@@ -101,6 +165,8 @@ void game_start(){
       updatePos(&playerPos, dir);
       drawMovement(&playerAsset, dir);
     }
+
+
     
   }            
   

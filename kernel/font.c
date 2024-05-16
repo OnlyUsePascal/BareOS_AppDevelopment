@@ -5,67 +5,74 @@
 #include "../lib/data/data_font2.h"
 #include "../lib/utils.h"
 
-/* Functions to display text on the screen */
-void font_drawChar(int x, int y, char ch, unsigned int attr, int zoom) {
-  unsigned char *glyph = (unsigned char *)&font + (ch < FONT_NUMGLYPHS ? ch : 0) * FONT_BPG;
+extern unsigned char (*font_)[8] = font;
+extern unsigned int font_numglyphs = FONT_NUMGLYPHS;
+extern unsigned int font_bpg = FONT_BPG;
+extern unsigned int font_bpl = FONT_BPL;
+extern unsigned int font_width = FONT_WIDTH;
+extern unsigned int font_height = FONT_HEIGHT;
 
-  for (int i = 1; i <= (FONT_HEIGHT*zoom); i++) {
-    for (int j = 0; j< (FONT_WIDTH*zoom); j++) {
+void get_font_type(int type) {
+  switch (type) {
+    case 1:
+      font_ = font;
+      font_numglyphs = FONT_NUMGLYPHS;
+      font_bpg = FONT_BPG;
+      font_bpl = FONT_BPL;
+      font_width = FONT_WIDTH;
+      font_height = FONT_HEIGHT;
+      break;
+    case 2:
+      font_ = font2;
+      font_numglyphs = FONT2_NUMGLYPHS;
+      font_bpg = FONT2_BPG;
+      font_bpl = FONT2_BPL;
+      font_width = FONT2_WIDTH;
+      font_height = FONT2_HEIGHT;
+      break;
+    default:
+      font_ = font;
+      font_numglyphs = FONT_NUMGLYPHS;
+      font_bpg = FONT_BPG;
+      font_bpl = FONT_BPL;
+      font_width = FONT_WIDTH;
+      font_height = FONT_HEIGHT;
+      break;
+  }
+}
+
+/* Functions to display text on the screen */
+void font_drawChar(int x, int y, char ch, unsigned int attr, int zoom, int type) {
+  get_font_type(type);
+  unsigned char *glyph = (unsigned char *)font_ + (ch < font_numglyphs ? ch : 0) * font_bpg;
+  for (int i = 1; i <= (font_height*zoom); i++) {
+    for (int j = 0; j< (font_width*zoom); j++) {
       unsigned char mask = 1 << (j/zoom);
       if (*glyph & mask) { //only draw pixels belong to the character glyph
         framebf_drawPixel(x + j, y + i, attr);
       }
     }
-    glyph += (i % zoom) ? 0 : FONT_BPL;
+    glyph += (i % zoom) ? 0 : font_bpl;
   }
 }
 
 
-void font_drawString(int x, int y, char *str, unsigned int attr, int zoom) {
+void font_drawString(int x, int y, char *str, unsigned int attr, int zoom, int type) {
+  get_font_type(type);
   while (*str) {
     if (*str == '\r') {
       x = 0;
     } else if (*str == '\n') {
       x = 0; 
-      y += (FONT_HEIGHT*zoom);
+      y += (font_height*zoom);
     } else {
-      font_drawChar(x, y, *str, attr, zoom);
-      x += (FONT_WIDTH*zoom);
+      font_drawChar(x, y, *str, attr, zoom, type);
+      x += (font_width*zoom);
     }
     str++;
   }
 }
 
 
-/* Functions to display text on the screen */
-void font2_drawChar(int x, int y, char ch, unsigned int attr, int zoom) {
-  unsigned char *glyph = (unsigned char *)&font2 + (ch < FONT2_NUMGLYPHS ? ch : 0) * FONT2_BPG;
-
-  for (int i = 1; i <= (FONT2_HEIGHT*zoom); i++) {
-    for (int j = 0; j< (FONT2_WIDTH*zoom); j++) {
-      unsigned char mask = 1 << (j/zoom);
-      if (*glyph & mask) { //only draw pixels belong to the character glyph
-        framebf_drawPixel(x + j, y + i, attr);
-      }
-    }
-    glyph += (i % zoom) ? 0 : FONT2_BPL;
-  }
-}
-
-
-void font2_drawString(int x, int y, char *str, unsigned int attr, int zoom) {
-  while (*str) {
-    if (*str == '\r') {
-      x = 0;
-    } else if (*str == '\n') {
-      x = 0; 
-      y += (FONT2_HEIGHT*zoom);
-    } else {
-      font2_drawChar(x, y, *str, attr, zoom);
-      x += (FONT2_WIDTH*zoom);
-    }
-    str++;
-  }
-}
 
 
