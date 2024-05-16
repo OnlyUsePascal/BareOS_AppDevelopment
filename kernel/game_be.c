@@ -99,9 +99,11 @@ void game_start() {
         }
 #ifdef DEBUG
         else if (c == 'k') {
-            uart_puts("here");
-            render_scene((const Asset *) &fovAsset, (const Asset *) &playerAsset, (isFOVShown = !isFOVShown));
-            uart_dec(isFOVShown);
+            render_scene(
+                    (const Asset *) &fovAsset,
+                    (const Asset *) &playerAsset,
+                    (isFOVShown = !isFOVShown)
+            );
         }
 #endif
         else {
