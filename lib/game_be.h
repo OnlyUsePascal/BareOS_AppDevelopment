@@ -29,7 +29,7 @@ typedef struct {
 typedef enum {
   TRAP,
   BOMB,
-  LIGHTER,
+  VISION,
   SPEEDUP,
   COIN
 } ItemId;

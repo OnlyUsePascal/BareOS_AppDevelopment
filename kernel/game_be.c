@@ -65,25 +65,28 @@ void game_start(){
   Position bombPos = {1, 9};
   Item bomb = {&bombAsset, &bombPos, BOMB};
   
+  Asset visionAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_vision};
+  Position visionPos = {5, 5};
+  Item vision = {&visionAsset, &visionPos, VISION};
+  
   posBeToFe(&playerPos, &playerAsset);
   posBeToFe(&bombPos, &bombAsset);
+  posBeToFe(&visionPos, &visionAsset);
 
   clearScreen();
   framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
-  
   drawAsset(&playerAsset);
   drawAsset(&bombAsset);
+  drawAsset(&visionAsset);
   
-  
-  // TODO: split to other functions
- 
   
   // movement 
   while (1) {
     uart_puts("---\n");
     char c = uart_getc();
     debugPos(playerPos);
-    
+      
+    // DEBUG / screen shading
     if(c == 'o'){
       moreScreenDarkness();
     }else if(c == 'p'){
@@ -121,9 +124,6 @@ void game_start(){
       updatePos(&playerPos, dir);
       drawMovement(&playerAsset, dir);
     }
-
-
-    
   }            
   
 }
