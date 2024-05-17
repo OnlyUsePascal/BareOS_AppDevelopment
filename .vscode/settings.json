@@ -20,7 +20,8 @@
     "data_font2.h": "c",
     "game_fe.h": "c",
     "math.h": "c",
-    "sstream": "c"
+    "sstream": "c",
+    "player_movement.h": "c"
   },
   "cmake.configureOnOpen": false
 }

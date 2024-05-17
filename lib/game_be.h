@@ -13,13 +13,6 @@ typedef struct {
 
 
 typedef struct {
-  int level;
-  int pathColor;
-  
-} Maze;
-
-
-typedef struct {
   int posX;
   int posY;
   
@@ -30,7 +23,6 @@ typedef enum {
   TRAP,
   BOMB,
   VISION,
-  SPEEDUP,
   COIN
 } ItemId;
 
@@ -39,6 +31,7 @@ typedef struct {
   Asset *asset;
   Position *pos;
   ItemId id;
+  int collided;
 } Item;
 
 
@@ -64,6 +57,14 @@ typedef enum {
 } Direction;
 
 
+typedef struct {
+  int level;
+  // int pathColor;
+  unsigned long *bitmap;
+  Item *items[10];
+  int itemsSz;
+} Maze;
+
 extern const int xOffset[];
 extern const int yOffset[];
 extern const char directionKey[];
@@ -74,7 +75,7 @@ void game_continue();
 void game_help();
 void game_exit();
 void clearScreen();
-
+Item* detect_collision(Position playerPos, Item *items[], int itemsSz);
 
 
 

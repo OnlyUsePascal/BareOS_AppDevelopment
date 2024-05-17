@@ -9,6 +9,7 @@
 #include "../lib/data/game/maze_state.h"
 #include "../lib/data/game/player.h"
 #include "../lib/data/game/item.h"
+#include "../lib/data/game/player_movement.h"
 
 
 
@@ -63,18 +64,21 @@ void game_start(){
   
   Asset bombAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_bomb};
   Position bombPos = {1, 9};
-  Item bomb = {&bombAsset, &bombPos, BOMB};
+  Item bomb = {&bombAsset, &bombPos, BOMB, 0};
   
   Asset visionAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_vision};
   Position visionPos = {5, 5};
-  Item vision = {&visionAsset, &visionPos, VISION};
+  Item vision = {&visionAsset, &visionPos, VISION, 0};
   
+  Maze maze1 = {1, bitmap_maze, {&bomb, &vision}, 2};
+  
+  // TODO: for loop for every maze item ?
   posBeToFe(&playerPos, &playerAsset);
   posBeToFe(&bombPos, &bombAsset);
   posBeToFe(&visionPos, &visionAsset);
 
   clearScreen();
-  framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
+  framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, maze1.bitmap);
   drawAsset(&playerAsset);
   drawAsset(&bombAsset);
   drawAsset(&visionAsset);
@@ -84,7 +88,7 @@ void game_start(){
   while (1) {
     uart_puts("---\n");
     char c = uart_getc();
-    debugPos(playerPos);
+    debug_pos(playerPos);
       
     // DEBUG / screen shading
     if(c == 'o'){
@@ -109,8 +113,8 @@ void game_start(){
       
       if (dir == -1) continue; 
       Position posTmp = {playerPos.posX, playerPos.posY};
-      updatePos(&posTmp, dir);
-      uart_puts("> "); debugPos(posTmp);
+      update_pos(&posTmp, dir);
+      uart_puts("> "); debug_pos(posTmp);
       
       if (posTmp.posX < 0 || posTmp.posY < 0) continue;
       //TODO: get map state base on its level
@@ -121,24 +125,42 @@ void game_start(){
         continue;
       } 
       
-      updatePos(&playerPos, dir);
-      drawMovement(&playerAsset, dir);
+      update_pos(&playerPos, dir);
+      Item *collidedItem = detect_collision(playerPos, maze1.items, maze1.itemsSz);
+      drawMovement(&playerAsset, dir, collidedItem);
+      handle_collision(collidedItem);
     }
   }            
   
 }
 
 
+Item* detect_collision(Position playerPos, Item *items[], int itemsSz) {
+  for (int i = 0 ; i < itemsSz; i++){
+    if (cmp_pos(playerPos, *(items[i]->pos)) && items[i]->collided == 0) {
+      return items[i];
+    }
+  }
+  
+  return NULL;  
+}
+
+
+void handle_collision(Item *item) {
+  if (item == NULL) return;
+  debug_item(*item);
+  // TODO: remove in backend
+  item->collided = 1;
+}
+
+
 void game_continue(){
   uart_puts("Continueing Game...\n");
-  
 }
 
 
 void game_help(){
   uart_puts("Game Instruction...\n");
-  
-  
 }
 
 
@@ -148,13 +170,34 @@ void game_exit(){
   font_drawString(150, 150, "Ta reng Ta reng Ta reng", MENU_FOREGND, 2, 1);
 }
 
-// ===== MAIN AREA =====
-void updatePos(Position *des, Direction dir){
+
+void update_pos(Position *des, Direction dir){
   des->posX += xOffset[dir];
   des->posY += yOffset[dir];
 }
 
 
-void debugPos(Position pos){
+int cmp_pos(Position pos1, Position pos2) {
+  return (pos1.posX == pos2.posX && pos1.posY == pos2.posY);
+}
+
+
+void debug_pos(Position pos){
   uart_puts("["); uart_dec(pos.posX); uart_puts(","); uart_dec(pos.posY); uart_puts("]\n");
+}
+
+
+void debug_item(Item item) {
+  uart_puts("[Item:");
+  switch (item.id) {
+    case BOMB:
+      uart_puts("Bomb");
+      break;
+    case VISION:
+      uart_puts("Vision");
+      break;
+    default:
+      break;
+  }
+  uart_puts("]\n");
 }

@@ -135,7 +135,7 @@ void resetScreenDarkness() {
 }
 
 
-void drawMovement(Asset *player, Direction dir){
+void drawMovement(Asset *player, Direction dir, Item *collidedItem){
   // TODO: animation with frame
   int step = 3;
   int stepOffset = MAZE_SZ_CELL_PIXEL / step;
@@ -154,6 +154,9 @@ void drawMovement(Asset *player, Direction dir){
   
   // walk the last step
   removeAsset(player);
+  if (collidedItem != NULL) {
+    removeAsset(collidedItem->asset); 
+  }
   updateAssetPos(player, posXFinal, posYFinal);
   drawAsset(player);
 }
