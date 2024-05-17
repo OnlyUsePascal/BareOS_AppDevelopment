@@ -31,12 +31,10 @@ extern void draw_picture(const uint64_t *img, const uint64_t w, const uint64_t h
         str_debug("h_offset: ");
         str_debug_num(h_offset);
 
-//        clearScreen();
         framebf_drawImg(w_offset, h_offset, w, h, img_data);
 }
 
 extern void move_picture(const img_direction d) {
-        bool checked_bounds = true;
         switch (d) {
                 case IMG_UP: {
                         if (h_offset < 0) {
@@ -55,7 +53,6 @@ extern void move_picture(const img_direction d) {
 
                         break;
                 } case IMG_LEFT: {
-//                        checked_bounds = check_bounds(w_offset - STEP, w_img);
                         if (w_offset < 0) {
                                 w_offset += STEP;
                         } else {
@@ -64,7 +61,6 @@ extern void move_picture(const img_direction d) {
 
                         break;
                 } case IMG_RIGHT: {
-//                        checked_bounds = check_bounds(w_offset + STEP, w_img);
                         if (abs(w_offset) < ((w_img - GAME_W) / 2)) {
                                 w_offset -= STEP;
                         } else {

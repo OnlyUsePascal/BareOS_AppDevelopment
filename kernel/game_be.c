@@ -10,98 +10,122 @@
 #include "../lib/data/game/player.h"
 #include "../lib/data/game/item.h"
 #include "../lib/data/game/player_movement.h"
-
-
+#include "lib/gpio.h"
 
 // ===== BACK-END =====
 const char directionKey[] = {'w', 'a', 's', 'd'};
 const int yOffset[] = {-1, 0, 1, 0};
 const int xOffset[] = {0, -1, 0, 1};
 
+void game_enter() {
+    // init
+    framebf_init(GAME_W, GAME_H, GAME_W, GAME_H);
 
-void game_enter(){
-  // init
-  framebf_init(GAME_W, GAME_H, GAME_W, GAME_H);
+    // background + headline
+    clearScreen();
 
-  // background + headline 
-  clearScreen();
-  
-  // menu
-  int menuPosX = 150, menuPosY = 200, yOffset = 50;
-  char *opts[] = {"Start", "Continue", "How To Play?", "Exit"};
-  int optSz = sizeof(opts) / sizeof(opts[0]);
-  
-  while (1) {
-    drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
-    int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz);  
-    
-    switch (optIdx) {
-      case 0: //start
-        game_start();
-        break;
-      
-      case 1: //continue
-        game_continue();
-        break;
-      
-      case 2: //help
-        game_help();
-        break;
-      
-      case 3: //exit
-        game_exit();
-        return;
+    // menu
+    int menuPosX = 150, menuPosY = 200, yOffset = 50;
+    char *opts[] = {"Start", "Continue", "How To Play?", "Exit"};
+    int optSz = sizeof(opts) / sizeof(opts[0]);
+
+    while (1) {
+        drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
+        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz);
+
+        switch (optIdx) {
+            case 0: //start
+                game_start();
+                break;
+
+            case 1: //continue
+                game_continue();
+                break;
+
+            case 2: //help
+                game_help();
+                break;
+
+            case 3: //exit
+                game_exit();
+                return;
+        }
+
     }
-    
-  }
 }
 
+void render_scene(const Asset *playerAsset, const bool isFOVShown) {
+    if (!isFOVShown) {
+        framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
+    } else {
+        clearScreen();
+        drawFOV((const Position) {playerAsset->posX, playerAsset->posY});
+    }
+
+    drawAsset(playerAsset);
+}
 
 void game_start(){
   uart_puts("Starting Game...\n");
   Asset playerAsset = {ASSET_HIDDEN, ASSET_HIDDEN, PLAYER_SZ, PLAYER_SZ, bitmap_player};
-  Position playerPos = {0, MAZE_SZ_CELL / 2}; 
-  
+  Position playerPos = {0, MAZE_SZ_CELL / 2};
+
   Asset bombAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_bomb};
   Position bombPos = {1, 9};
   Item bomb = {&bombAsset, &bombPos, BOMB, 0};
-  
+
   Asset visionAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_vision};
   Position visionPos = {5, 5};
   Item vision = {&visionAsset, &visionPos, VISION, 0};
-  
+
   Maze maze1 = {1, bitmap_maze, {&bomb, &vision}, 2};
-  
+
   // TODO: for loop for every maze item ?
   posBeToFe(&playerPos, &playerAsset);
   posBeToFe(&bombPos, &bombAsset);
   posBeToFe(&visionPos, &visionAsset);
 
+#ifdef DEBUG
+    bool isFOVShown = false;
+#endif
+
   clearScreen();
-  framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, maze1.bitmap);
-  drawAsset(&playerAsset);
+#ifdef DEBUG
+    render_scene((const Asset *) &playerAsset, isFOVShown);
+#else
+    render_scene((const Asset *) &playerAsset, true);
+#endif
   drawAsset(&bombAsset);
   drawAsset(&visionAsset);
-  
-  
-  // movement 
+
+
+  // movement
   while (1) {
     uart_puts("---\n");
     char c = uart_getc();
     debug_pos(playerPos);
-      
+
     // DEBUG / screen shading
     if(c == 'o'){
       moreScreenDarkness();
     }else if(c == 'p'){
       resetScreenDarkness();
     }
-    
+
     if (c == 27) {
       //TODO: temporary escape to menu
       clearScreen();
-      break;      
-    } else {
+      break;
+    }
+#ifdef DEBUG
+      else if (c == 'k') {
+        render_scene(
+                (const Asset *) &playerAsset,
+                (isFOVShown = !isFOVShown)
+        );
+    }
+#endif
+    else {
       //TODO: movement
       Direction dir = -1;
       for (int i = 0; i < 4; i++){
@@ -110,12 +134,12 @@ void game_start(){
           break;
         }
       }
-      
-      if (dir == -1) continue; 
+
+      if (dir == -1) continue;
       Position posTmp = {playerPos.posX, playerPos.posY};
       update_pos(&posTmp, dir);
       uart_puts("> "); debug_pos(posTmp);
-      
+
       if (posTmp.posX < 0 || posTmp.posY < 0) continue;
       //TODO: get map state base on its level
       int mazeState = bitmap_mazeState[MAZE_SZ_CELL * posTmp.posY + posTmp.posX];
@@ -123,15 +147,24 @@ void game_start(){
       if (mazeState == 0) {
         str_debug("hit wall!");
         continue;
-      } 
-      
+      }
+
       update_pos(&playerPos, dir);
       Item *collidedItem = detect_collision(playerPos, maze1.items, maze1.itemsSz);
-      drawMovement(&playerAsset, dir, collidedItem);
+#ifdef DEBUG
+          if (isFOVShown) {
+                drawFOVMovement((Position) {playerAsset.posX, playerAsset.posY}, dir);
+            }
+#else
+          drawFOVMovement((Position) {playerAsset.posX, playerAsset.posY}, dir);
+#endif
+          drawMovement(&playerAsset, dir);
+      }
+  }
       handle_collision(collidedItem);
     }
-  }            
-  
+  }
+
 }
 
 
@@ -141,8 +174,8 @@ Item* detect_collision(Position playerPos, Item *items[], int itemsSz) {
       return items[i];
     }
   }
-  
-  return NULL;  
+
+  return NULL;
 }
 
 
@@ -159,8 +192,10 @@ void game_continue(){
 }
 
 
-void game_help(){
-  uart_puts("Game Instruction...\n");
+void game_help() {
+    uart_puts("Game Instruction...\n");
+
+
 }
 
 
