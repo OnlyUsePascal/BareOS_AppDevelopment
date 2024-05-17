@@ -21,7 +21,7 @@ int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz);
 
 void drawAsset(Asset *asset);
 void removeAsset(Asset *asset);
-void drawMovement(Asset *asset, Direction dir);
+void drawMovement(Asset *asset, Direction dir, Item *collidedItem);
 void updateAssetPos(Asset *asset, int x, int y);
 
 void posBeToFe(Position *pos, Asset *asset);
