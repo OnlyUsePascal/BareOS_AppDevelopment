@@ -53,12 +53,12 @@ void game_enter() {
     }
 }
 
-void render_scene(const Asset *fovAsset, const Asset *playerAsset, const bool isFOVShown) {
+void render_scene(const Asset *playerAsset, const bool isFOVShown) {
     if (!isFOVShown) {
         framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
     } else {
         clearScreen();
-        drawFOV( fovAsset);
+        drawFOV((const Position) {playerAsset->posX, playerAsset->posY});
     }
 
     drawAsset(playerAsset);
@@ -67,7 +67,6 @@ void render_scene(const Asset *fovAsset, const Asset *playerAsset, const bool is
 void game_start() {
     uart_puts("Starting Game...\n");
     Asset playerAsset = {ASSET_HIDDEN, ASSET_HIDDEN, PLAYER_SZ, PLAYER_SZ, bitmap_player};
-    Asset fovAsset = {ASSET_HIDDEN, ASSET_HIDDEN, FOV_SZ, FOV_SZ, bitmap_fov};
     Position playerPos = {0, 5};
 
 #ifdef DEBUG
@@ -76,14 +75,12 @@ void game_start() {
 
     updateAssetPos(&playerAsset, (MAZE_SZ_CELL_PIXEL - PLAYER_SZ) / 2,
                    MAZE_SZ_CELL_PIXEL * (MAZE_SZ_CELL / 2) + (MAZE_SZ_CELL_PIXEL - PLAYER_SZ) / 2);
-    updateAssetPos(&fovAsset, (MAZE_SZ_CELL_PIXEL - PLAYER_SZ) / 2,
-                   MAZE_SZ_CELL_PIXEL * (MAZE_SZ_CELL / 2) + (MAZE_SZ_CELL_PIXEL - PLAYER_SZ) / 2);
     clearScreen();
 
 #ifdef DEBUG
-    render_scene((const Asset *) &fovAsset, (const Asset *) &playerAsset, isFOVShown);
+    render_scene((const Asset *) &playerAsset, isFOVShown);
 #else
-    render_scene((const Asset *) &fovAsset, (const Asset *) &playerAsset, true);
+    render_scene((const Asset *) &playerAsset, true);
 #endif
 
     // movement
@@ -100,7 +97,6 @@ void game_start() {
 #ifdef DEBUG
         else if (c == 'k') {
             render_scene(
-                    (const Asset *) &fovAsset,
                     (const Asset *) &playerAsset,
                     (isFOVShown = !isFOVShown)
             );
@@ -136,14 +132,13 @@ void game_start() {
             updatePos(&playerPos, dir);
 #ifdef DEBUG
             if (isFOVShown) {
-                drawFOVMovement(&fovAsset, dir);
+                drawFOVMovement((Position) {playerAsset.posX, playerAsset.posY}, dir);
             }
 #else
-            drawFOVMovement(&fovAsset, dir);
+            drawFOVMovement((Position) {playerAsset.posX, playerAsset.posY}, dir);
 #endif
             drawMovement(&playerAsset, dir);
         }
-
     }
 
 }

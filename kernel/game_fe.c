@@ -70,11 +70,14 @@ void removeAsset(const Asset *asset) {
     }
 }
 
-void removeFOV(const Asset *asset) {
-    for (int y = asset->posY - FOV_SZ / 2 + PLAYER_SZ / 2; y < asset->posY + FOV_SZ / 2 + PLAYER_SZ / 2; ++y) {
-        for (int x = asset->posX - FOV_SZ / 2 + PLAYER_SZ / 2; x < asset->posX + FOV_SZ / 2 + PLAYER_SZ / 2; ++x) {
-            if (x >= 0 && y >= 0 && x < MAZE_SZ && y < MAZE_SZ) {
-                framebf_drawPixel(x, y, MENU_BACKGND);
+void removeFOV(const Position playerPos) {
+    for (int y = playerPos.posY - currentRadius; y <= playerPos.posY + currentRadius; ++y) {
+        for (int x = playerPos.posX - currentRadius; x <= playerPos.posX + currentRadius; ++x) {
+            int dx = x - playerPos.posX, dy = y - playerPos.posY;
+            if (dx * dx + dy * dy <= currentRadius * currentRadius) {
+                if (x >= 0 && y >= 0 && x < MAZE_SZ && y < MAZE_SZ) {
+                    framebf_drawPixel(x, y, MENU_BACKGND);
+                }
             }
         }
     }
@@ -103,27 +106,29 @@ void drawMovement(Asset *asset, Direction dir) {
     drawAsset(asset);
 }
 
-void drawFOVMovement(Asset *asset, Direction dir) {
+void drawFOVMovement(Position initialPlayerPosition, Direction dir) {
     // TODO: animation with frame
     int step = STEP_AMOUNT;
     int stepOffset = MAZE_SZ_CELL_PIXEL / step;
-    int posXFinal = asset->posX + xOffset[dir] * MAZE_SZ_CELL_PIXEL;
-    int posYFinal = asset->posY + yOffset[dir] * MAZE_SZ_CELL_PIXEL;
+    int posXFinal = initialPlayerPosition.posX + xOffset[dir] * MAZE_SZ_CELL_PIXEL;
+    int posYFinal = initialPlayerPosition.posY + yOffset[dir] * MAZE_SZ_CELL_PIXEL;
 
     // walk the middle
     for (int i = 0; i < step - 1; i++) {
-        removeFOV(asset);
-        updateAssetPos(asset, asset->posX + xOffset[dir] * stepOffset,
-                       asset->posY + yOffset[dir] * stepOffset);
+        removeFOV(initialPlayerPosition);
 
-        drawFOV(asset);
+        initialPlayerPosition.posX = initialPlayerPosition.posX + xOffset[dir] * stepOffset;
+        initialPlayerPosition.posY = initialPlayerPosition.posY + yOffset[dir] * stepOffset;
+
+        drawFOV(initialPlayerPosition);
         wait_msec(62500);
     }
 
     // walk the last step
-    removeFOV(asset);
-    updateAssetPos(asset, posXFinal, posYFinal);
-    drawFOV(asset);
+    removeFOV(initialPlayerPosition);
+    initialPlayerPosition.posX = posXFinal;
+    initialPlayerPosition.posY = posYFinal;
+    drawFOV(initialPlayerPosition);
 }
 
 
@@ -132,11 +137,14 @@ void updateAssetPos(Asset *asset, int x, int y) {
     asset->posY = y;
 }
 
-void drawFOV(const Asset *asset) {
-    for (int y = asset->posY - FOV_SZ / 2 + PLAYER_SZ / 2, iy = 0; y < asset->posY + FOV_SZ / 2 + PLAYER_SZ / 2; ++y, ++iy) {
-        for (int x = asset->posX - FOV_SZ / 2 + PLAYER_SZ / 2, ix = 0; x < asset->posX + FOV_SZ / 2 + PLAYER_SZ / 2; ++x, ++ix) {
-            if (x >= 0 && y >= 0 && x < MAZE_SZ && y < MAZE_SZ && asset->bitmap[iy * FOV_SZ + ix] != 0x0) {
-                framebf_drawPixel(x, y, bitmap_maze[y * MAZE_SZ + x]);
+void drawFOV(const Position playerPos) {
+    for (int y = playerPos.posY - currentRadius; y <= playerPos.posY + currentRadius; ++y) {
+        for (int x = playerPos.posX - currentRadius; x <= playerPos.posX + currentRadius; ++x) {
+            int dx = x - playerPos.posX, dy = y - playerPos.posY;
+            if (dx * dx + dy * dy <= currentRadius * currentRadius) {
+                if (x >= 0 && y >= 0 && x < MAZE_SZ && y < MAZE_SZ) {
+                    framebf_drawPixel(x, y, bitmap_maze[y * MAZE_SZ + x]);
+                }
             }
         }
     }

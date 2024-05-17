@@ -1,6 +1,8 @@
 #ifndef GAME_BE_H
 #define GAME_BE_H
 
+#include "gpio.h"
+
 #define MAZE_SZ_CELL 11 
 #define MAZE_SZ_CELL_PIXEL 40 
 #define PLAYER_SZ 20
@@ -52,6 +54,7 @@ typedef enum {
 extern const int xOffset[];
 extern const int yOffset[];
 extern const char directionKey[];
+static uint16_t currentRadius = 100;
 
 void game_enter();
 void game_start();
