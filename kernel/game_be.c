@@ -8,7 +8,6 @@
 #include "../lib/data/game/maze.h"
 #include "../lib/data/game/maze_state.h"
 #include "../lib/data/game/player.h"
-#include "lib/data/game/fov.h"
 #include "lib/gpio.h"
 
 // ===== BACK-END =====

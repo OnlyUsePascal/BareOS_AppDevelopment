@@ -5,7 +5,6 @@
 #include "../lib/def.h"
 #include "../lib/framebf.h"
 #include "../lib/data/game/maze.h"
-#include "lib/data/game/fov.h"
 
 #define STEP_AMOUNT 3
 
