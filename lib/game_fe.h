@@ -24,7 +24,7 @@ int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz);
 
 void drawFOVMovement(Position initialPlayerPosition, Direction dir);
 void removeFOV(const Asset *asset);
-void drawFOV(const Asset *asset);
+void drawFOV(const Maze *maze, const Asset *asset);
 
 void drawMovement(Maze *maze, Asset *asset, Direction dir, Item *collidedItem);
 void removeAsset(const Asset *asset);
@@ -36,12 +36,12 @@ void posBeToFe(Position *pos, Asset *asset);
 void debugAsset(Asset asset);
 void getMazePathColor(Maze *maze);
 
-void resetScreenDarkness();
-void moreScreenDarkness();
+void adjustBrightness(const Maze *maze, const Asset *asset, bool darken);
+uint64_t darkenPixel(uint64_t color, const float factor);
 
 extern float cur_darken;
-extern float darken_factor;
+extern const float darken_factor;
 extern float cur_lighten;
-extern float lighten_factor;
+extern const float lighten_factor;
 
 #endif

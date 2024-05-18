@@ -8,9 +8,9 @@
 #define STEP_AMOUNT 3
 
 float cur_darken = 1.0f; 
-float darken_factor = 0.8f; 
+const float darken_factor = 0.8f; 
 float cur_lighten = 1.0f; 
-float lighten_factor = 1.25f;
+const float lighten_factor = 1.25f;
 
 
 void clearScreen(){
@@ -86,13 +86,13 @@ void embedAsset(const Maze *maze, const Asset *asset, bool fill){
 }
 
 
-void drawFOV(const Asset *asset) {
+void drawFOV(const Maze *maze, const Asset *asset) {
     for (int y = asset->posY - currentRadius; y <= asset->posY + currentRadius; ++y) {
         for (int x = asset->posX - currentRadius; x <= asset->posX + currentRadius; ++x) {
             int dx = x - asset->posX, dy = y - asset->posY;
             if (dx * dx + dy * dy <= currentRadius * currentRadius) {
                 if (x >= 0 && y >= 0 && x < MAZE_SZ && y < MAZE_SZ) {
-                    framebf_drawPixel(x, y, bitmap_maze[y * MAZE_SZ + x]);
+                    framebf_drawPixel(x, y, darkenPixel(maze->bitmap[y * MAZE_SZ + x], cur_darken));
                 }
             }
         }
@@ -126,7 +126,7 @@ void drawMovement(Maze *maze, Asset *asset, Direction dir, Item *collidedItem){
         removeFOV(asset);
         updateAssetPos(asset, asset->posX + xOffset[dir] * stepOffset, 
                             asset->posY + yOffset[dir] * stepOffset);
-        drawFOV(asset);
+        drawFOV(maze, asset);
         drawAsset(asset);
         wait_msec(62500);
     }
@@ -138,71 +138,46 @@ void drawMovement(Maze *maze, Asset *asset, Direction dir, Item *collidedItem){
         embedAsset(maze, collidedItem->asset, false); 
     }
     updateAssetPos(asset, posXFinal, posYFinal);
-    drawFOV(asset);
+    drawFOV(maze, asset);
     drawAsset(asset);
 }
 
 
-void moreScreenDarkness() {
-    cur_darken *= darken_factor;
-    for (int i = 0; i < MAZE_SZ; i++){
-        for (int j = 0; j < MAZE_SZ; j++){
-
-        unsigned long color = bitmap_maze[i + j * MAZE_SZ];
-        // uart_hex(color); uart_puts("\n");
-        unsigned long r = (color & 0xFF0000) >> 16;
-        unsigned long g = (color & 0x00FF00) >> 8;
-        unsigned long b = (color & 0x0000FF);
-
-        // Darken the RGB values       
-        r = (unsigned long)(r * cur_darken);
-        g = (unsigned long)(g * cur_darken);
-        b = (unsigned long)(b * cur_darken);
-
-        // Ensure the values are within the valid range
-        if (r < 0) r = 0;
-        if (g < 0) g = 0;
-        if (b < 0) b = 0;
-
-        // Combine the RGB values back into a single color value
-        unsigned long new_color = (r << 16) | (g << 8) | b;
-        // uart_dec(new_color); uart_puts("\n");
-        framebf_drawPixel(i, j, new_color);
-        }
-    }
+void adjustBrightness(const Maze *maze, const Asset *asset, bool darken) {
+    cur_darken = (darken) ? max_f(cur_darken * darken_factor, 0) 
+                        : min_f(cur_darken / darken_factor, 1);
+    drawFOV(maze, asset);
+    drawAsset(asset);
 }
 
 
 void resetScreenDarkness() {
     for (int i = 0; i < MAZE_SZ; i++){
         for (int j = 0; j < MAZE_SZ; j++){
-
-        unsigned long color = bitmap_maze[i + j * MAZE_SZ];
-        // uart_hex(color); uart_puts("\n");
-        unsigned long r = (color & 0xFF0000) >> 16;
-        unsigned long g = (color & 0x00FF00) >> 8;
-        unsigned long b = (color & 0x0000FF);
-
-        // Darken the RGB values       
-        r = (unsigned long)(r * cur_lighten);
-        g = (unsigned long)(g * cur_lighten);
-        b = (unsigned long)(b * cur_lighten);
-
-        // Ensure the values are within the valid range
-        if (r < 0) r = 0;
-        if (g < 0) g = 0;
-        if (b < 0) b = 0;
-
-        // Combine the RGB values back into a single color value
-        unsigned long new_color = (r << 16) | (g << 8) | b;
-        // uart_dec(new_color); uart_puts("\n");
-        framebf_drawPixel(i, j, new_color);
+            framebf_drawPixel(
+                i, j, darkenPixel(bitmap_maze[i + j * MAZE_SZ], cur_lighten));
         }
     }
-    // clearScreen();
-    // framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
-    // drawAsset(playerAsset);
-    // cur_darken = 0.8f;
+}
+
+
+uint64_t darkenPixel(uint64_t color, const float factor) {
+    unsigned long r = (color & 0xFF0000) >> 16;
+    unsigned long g = (color & 0x00FF00) >> 8;
+    unsigned long b = (color & 0x0000FF);
+
+    // Darken the RGB values       
+    r = (unsigned long)(r * factor);
+    g = (unsigned long)(g * factor);
+    b = (unsigned long)(b * factor);
+
+    // Ensure the values are within the valid range
+    if (r < 0) r = 0;
+    if (g < 0) g = 0;
+    if (b < 0) b = 0;
+
+    // Combine the RGB values back into a single color value
+    return ((r << 16) | (g << 8) | b);
 }
 
 

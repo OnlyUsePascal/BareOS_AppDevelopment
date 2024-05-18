@@ -69,9 +69,7 @@ void game_start(){
     Item vision = {&visionAsset, &visionPos, VISION, 0};
     
     Maze maze1 = {1, -1, bitmap_maze, {&bomb, &vision}, 2};
-    
     getMazePathColor(&maze1);
-    uart_puts("[maze path color: "); uart_hex(maze1.pathColor); uart_puts("]\n"); 
     
     // TODO: for loop for every maze item ?
     posBeToFe(&playerPos, &playerAsset);
@@ -82,7 +80,7 @@ void game_start(){
     embedAsset(&maze1, bomb.asset, true);
     embedAsset(&maze1, vision.asset, true);
     
-    render_scene(&playerAsset, isFOVShown);
+    render_scene(&maze1, &playerAsset, isFOVShown);
     
     // movement 
     while (1) {
@@ -92,10 +90,10 @@ void game_start(){
         
         // DEBUG / screen shading
         if(c == 'o'){
-            moreScreenDarkness();
+            adjustBrightness(&maze1, &playerAsset, true);
         }
         else if(c == 'p'){
-            resetScreenDarkness();
+            adjustBrightness(&maze1, &playerAsset, false);
         } 
         else if (c == 27) {
             //TODO: temporary escape to menu
@@ -104,7 +102,7 @@ void game_start(){
         } 
         else if (c == 'k') {
             isFOVShown = !isFOVShown;
-            render_scene(&playerAsset, isFOVShown);
+            render_scene(&maze1, &playerAsset, isFOVShown);
         }
         else {
             //TODO: movement
@@ -155,12 +153,12 @@ void game_exit() {
 
 
 // ===============================
-void render_scene(const Asset *asset, const bool isFOVShown) {
+void render_scene(const Maze *maze, const const Asset *asset, const bool isFOVShown) {
     if (!isFOVShown) {
         framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
     } else {
         clearScreen();
-        drawFOV(asset);
+        drawFOV(maze, asset);
     }
 
     drawAsset(asset);
