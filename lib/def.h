@@ -9,7 +9,6 @@
 #define FG_DEF "\033[37m"
 #define BG_DEF "\033[40m"
 
-#define DEBUG
 
 extern const char *cmdList[];
 extern const char *colorList[];
@@ -30,8 +29,9 @@ enum Cmd {
 #endif
 };
 
-#define FEAT_IMG
+// #define FEAT_IMG
 // #define FEAT_VID
+#define DEBUG
 #define FEAT_FONT
 #define FEAT_GAME
 

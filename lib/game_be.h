@@ -4,33 +4,37 @@
 #include "gpio.h"
 
 #define MAZE_SZ_CELL 11 
-#define MAZE_SZ_CELL_PIXEL 40 
-#define PLAYER_SZ 20
 
 typedef struct {
-  int level;
-  int pathColor;
-  
-} Maze;
+  int posX; // x in maze
+  int posY; // y in maze
+  int width; 
+  int height; 
+  unsigned long *bitmap;
+} Asset; 
+
 
 typedef struct {
   int posX;
   int posY;
-  
 } Position;
+
 
 typedef enum {
   TRAP,
   BOMB,
-  LIGHTER,
-  SPEEDUP,
+  VISION,
   COIN
 } ItemId;
 
+
 typedef struct {
-  Position pos;
+  Asset *asset;
+  Position *pos;
   ItemId id;
+  int collided;
 } Item;
+
 
 typedef struct {
   int radius;
@@ -38,11 +42,13 @@ typedef struct {
   int fadingSpeed; // ???
 } Light;
 
+
 typedef struct {
   Position pos;
   Light light;
   int speed; // ???
-};
+} Player;
+
 
 typedef enum {
   UP,
@@ -50,6 +56,15 @@ typedef enum {
   DOWN,
   RIGHT
 } Direction;
+
+
+typedef struct {
+  int level;
+  // int pathColor;
+  const unsigned long *bitmap;
+  Item *items[10];
+  int itemsSz;
+} Maze;
 
 extern const int xOffset[];
 extern const int yOffset[];
@@ -67,6 +82,7 @@ void clearScreen();
 void cli_toggle_fov();
 #endif
 
+Item* detect_collision(Position playerPos, Item *items[], int itemsSz);
 
 
 

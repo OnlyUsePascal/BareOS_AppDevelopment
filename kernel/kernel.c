@@ -8,7 +8,7 @@
 // #include "../lib/data/data_font.h"
 #include "../lib/data/data_vid.h"
 #include "../lib/image.h"
-#include "../lib/data/images/sample_pic.h"
+#include "../lib/data/data_image.h"
 
 
 void cli() {
@@ -210,7 +210,6 @@ void cli_processCmd(const char *cmd, int cmdSz) {
 }
 
 
-// find index of given cmd in avalablie cmd list
 enum Cmd cli_findCmd(const char *cmd) {
     enum Cmd cmdIdx = -1;
     for (int i = 0; i < cmdListSz; i++) {
@@ -224,7 +223,6 @@ enum Cmd cli_findCmd(const char *cmd) {
 }
 
 
-// cmd help
 void cli_help(const char *cmd) {
     uart_puts("-- Help --\n");
     // retrieve command name
@@ -236,7 +234,6 @@ void cli_help(const char *cmd) {
         helper_generic();
         return;
     }
-
     helper_specific(cli_findCmd(cmdBase));
 }
 
@@ -248,58 +245,49 @@ void cli_clrscr() {
 
 void cli_img() {
     uart_puts("--> cli image!!\n");
+    #ifdef FEAT_IMG
     draw_picture(moved_image, MOVED_IMAGE_WIDTH, MOVED_IMAGE_HEIGHT);
-
     char ch = uart_getc();
     while (true) {
-        if (ch != IMG_UP && ch != IMG_DOWN && ch != IMG_LEFT && ch != IMG_RIGHT) {
-            break;
-        }
-
-        move_picture(ch);
-        ch = uart_getc();
+            if (ch != IMG_UP && ch != IMG_DOWN && ch != IMG_LEFT && ch != IMG_RIGHT) {
+                    break;
+            }
+            move_picture(ch);
+            ch = uart_getc();
     }
-
+    #endif
 }
 
 
 void cli_vid() {
 #ifdef FEAT_VID
     uart_puts("--> cli video!!\n");
-
     framebf_init(VID_W, VID_H, VID_W, VID_H);
     // play video 3 times
     for (int i = 0 ; i < 2 ; i++) {
-      for (int frame = 0; frame < epd_bitmap_allArray_LEN; frame++){
-        framebf_drawImg(0,0,VID_W, VID_H, epd_bitmap_allArray[frame]);
-        wait_msec(36250);
-      }
-      wait_msec(1000000);
+        for (int frame = 0; frame < epd_bitmap_allArray_LEN; frame++){
+            framebf_drawImg(0,0,VID_W, VID_H, epd_bitmap_allArray[frame]);
+            wait_msec(36250);
+        }
+        wait_msec(1000000);
     }
 #endif
 }
 
 
-void cli_font() {
+void cli_font(){
     uart_puts("--> cli font!!\n");
-
+    
     const int fontW = 900, fontH = 600;
     const int OFFSET = 250;
     framebf_init(fontW, fontH, fontW, fontH);
-
-    // font_drawString(fontW / 2 - OFFSET, 100, "GROUP: NARUTO", 0xFFFF00, 5);
-    // font_drawString(fontW / 2 - OFFSET + 20, 200, "NGUYEN DANG HUAN      - S3927467", 0x00FFFF, 2);
-    // font_drawString(fontW / 2 - OFFSET + 20, 250, "PHAM XUAN DAT         - S3927188", 0x000FFA, 2);
-    // font_drawString(fontW / 2 - OFFSET + 20, 300, "TRUONG VO THIEN NHAN  - S3929215", 0xE4D00A, 2);
-    // font_drawString(fontW / 2 - OFFSET + 20, 350, "PAVEL POTEMKIN        - S3963284", 0x7FFFD4, 2);
-
-    font2_drawString(fontW / 2 - OFFSET, 100, "GROUP: NARUTO", 0xFFFF00, 5);
-    font2_drawString(fontW / 2 - OFFSET + 20, 200, "NGUYEN DANG HUAN      - S3927467", 0x00FFFF, 2);
-    font2_drawString(fontW / 2 - OFFSET + 20, 250, "PHAM XUAN DAT         - S3927188", 0x000FFA, 2);
-    font2_drawString(fontW / 2 - OFFSET + 20, 300, "TRUONG VO THIEN NHAN  - S3929215", 0xE4D00A, 2);
-    font2_drawString(fontW / 2 - OFFSET + 20, 350, "PAVEL POTEMKIN        - S3963284", 0x7FFFD4, 2);
-
-    // font2_drawChar(100, 100, 'N', 0xFFFF00, 50);
+    
+    font_drawString(fontW / 2 - OFFSET, 100, "GROUP: NARUTO", 0xFFFF00, 5, 2);
+    font_drawString(fontW / 2 - OFFSET + 20, 200, "NGUYEN DANG HUAN      - S3927467", 0x00FFFF, 2, 2);
+    font_drawString(fontW / 2 - OFFSET + 20, 250, "PHAM XUAN DAT         - S3927188", 0x000FFA, 2, 2);
+    font_drawString(fontW / 2 - OFFSET + 20, 300, "TRUONG VO THIEN NHAN  - S3929215", 0xE4D00A, 2, 2);
+    font_drawString(fontW / 2 - OFFSET + 20, 350, "PAVEL POTEMKIN        - S3963284", 0x7FFFD4, 2, 2);
+    
     wait_msec(1000000);
 }
 
@@ -308,6 +296,7 @@ void cli_game() {
     uart_puts("Entering Game Mode...\n");
     game_enter();
 }
+
 
 void main() {
     // intitialize UART

@@ -8,7 +8,8 @@
 #include "../lib/data/game/maze.h"
 #include "../lib/data/game/maze_state.h"
 #include "../lib/data/game/player.h"
-#include "lib/gpio.h"
+#include "../lib/data/game/item.h"
+#include "../lib/data/game/player_movement.h"
 
 // ===== BACK-END =====
 const char directionKey[] = {'w', 'a', 's', 'd'};
@@ -52,118 +53,144 @@ void game_enter() {
     }
 }
 
-void render_scene(const Asset *playerAsset, const bool isFOVShown) {
-    if (!isFOVShown) {
-        framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
-    } else {
-        clearScreen();
-        drawFOV((const Position) {playerAsset->posX, playerAsset->posY});
-    }
 
-    drawAsset(playerAsset);
-}
-
-void game_start() {
+void game_start(){
     uart_puts("Starting Game...\n");
     Asset playerAsset = {ASSET_HIDDEN, ASSET_HIDDEN, PLAYER_SZ, PLAYER_SZ, bitmap_player};
-    Position playerPos = {0, 5};
-
-#ifdef DEBUG
-    bool isFOVShown = false;
-#endif
-
-    updateAssetPos(&playerAsset, (MAZE_SZ_CELL_PIXEL - PLAYER_SZ) / 2,
-                   MAZE_SZ_CELL_PIXEL * (MAZE_SZ_CELL / 2) + (MAZE_SZ_CELL_PIXEL - PLAYER_SZ) / 2);
-    clearScreen();
-
-#ifdef DEBUG
-    render_scene((const Asset *) &playerAsset, isFOVShown);
-#else
-    render_scene((const Asset *) &playerAsset, true);
-#endif
-
-    // movement
+    Position playerPos = {0, MAZE_SZ_CELL / 2}; 
+    
+    Asset bombAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_bomb};
+    Position bombPos = {1, 9};
+    Item bomb = {&bombAsset, &bombPos, BOMB, 0};
+    
+    Asset visionAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_vision};
+    Position visionPos = {5, 5};
+    Item vision = {&visionAsset, &visionPos, VISION, 0};
+    
+    Maze maze1 = {1, bitmap_maze, {&bomb, &vision}, 2};
+    
+    bool isFOVShown = true;
+    
+    // TODO: for loop for every maze item ?
+    posBeToFe(&playerPos, &playerAsset);
+    posBeToFe(&bombPos, &bombAsset);
+    posBeToFe(&visionPos, &visionAsset);
+    
+    render_scene(&playerAsset, isFOVShown);
+    // TODO: render item
+    // clearScreen();
+    // framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, maze1.bitmap);
+    // drawFOV(playerPos);
+    // drawAsset(&playerAsset); 
+    // drawAsset(&playerAsset);
+    // drawAsset(&bombAsset);
+    // drawAsset(&visionAsset);
+    
+    
+    // movement 
     while (1) {
         uart_puts("---\n");
         char c = uart_getc();
-        debugPos(playerPos);
-
-        if (c == 27) {
+        debug_pos(playerPos);
+        
+        // DEBUG / screen shading
+        if(c == 'o'){
+            moreScreenDarkness();
+        }
+        else if(c == 'p'){
+            resetScreenDarkness();
+        } 
+        else if (c == 27) {
             //TODO: temporary escape to menu
             clearScreen();
-            break;
-        }
-#ifdef DEBUG
+            break;      
+        } 
         else if (c == 'k') {
-            render_scene(
-                    (const Asset *) &playerAsset,
-                    (isFOVShown = !isFOVShown)
-            );
+            isFOVShown = !isFOVShown;
+            render_scene(&playerAsset, isFOVShown);
         }
-#endif
         else {
             //TODO: movement
             Direction dir = -1;
-            for (int i = 0; i < 4; i++) {
-                if (directionKey[i] == c) {
-                    dir = i;
-                    break;
+            for (int i = 0; i < 4; i++){
+                if (directionKey[i] == c){
+                    dir = i; break;
                 }
             }
-
-            if (dir == -1)
-                continue;
+        
+            if (dir == -1) continue; 
             Position posTmp = {playerPos.posX, playerPos.posY};
-            updatePos(&posTmp, dir);
-            uart_puts("> ");
-            debugPos(posTmp);
-
-            if (posTmp.posX < 0 || posTmp.posY < 0)
-                continue;
+            update_pos(&posTmp, dir);
+            uart_puts("> "); debug_pos(posTmp);
+            
+            if (posTmp.posX < 0 || posTmp.posY < 0) continue;
             //TODO: get map state base on its level
-            int mazeState = bitmap_mazeState[MAZE_SZ_CELL * posTmp.posY + posTmp.posX];
+            int mazeState = bitmap_mazeState1[MAZE_SZ_CELL * posTmp.posY + posTmp.posX];
             str_debug_num(mazeState);
             if (mazeState == 0) {
-                str_debug("hit wall!");
-                continue;
-            }
-
-            updatePos(&playerPos, dir);
-#ifdef DEBUG
-            if (isFOVShown) {
-                drawFOVMovement((Position) {playerAsset.posX, playerAsset.posY}, dir);
-            }
-#else
-            drawFOVMovement((Position) {playerAsset.posX, playerAsset.posY}, dir);
-#endif
-            drawMovement(&playerAsset, dir);
+                str_debug("hit wall!"); continue;
+            } 
+            
+            update_pos(&playerPos, dir);
+            Item *collidedItem = detect_collision(playerPos, maze1.items, maze1.itemsSz);
+            drawMovement(&playerAsset, dir, collidedItem);
+            handle_collision(collidedItem);
         }
-    }
-
+    } 
 }
 
 
 void game_continue() {
     uart_puts("Continueing Game...\n");
-
 }
 
 
 void game_help() {
     uart_puts("Game Instruction...\n");
-
-
 }
 
 
 void game_exit() {
     clearScreen();
     uart_puts("Exiting game...\n");
-    font_drawString(150, 150, "Ta reng Ta reng Ta reng", MENU_FOREGND, 2);
+    font_drawString(150, 150, "Ta reng Ta reng Ta reng", MENU_FOREGND, 2, 1);
 }
 
-// ===== MAIN AREA =====
-void updatePos(Position *des, Direction dir) {
+
+// ===============================
+void render_scene(const Asset *asset, const bool isFOVShown) {
+    if (!isFOVShown) {
+        framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
+    } else {
+        clearScreen();
+        drawFOV(asset);
+    }
+
+    drawAsset(asset);
+}
+
+
+Item* detect_collision(Position playerPos, Item *items[], int itemsSz) {
+    for (int i = 0 ; i < itemsSz; i++){
+        if (cmp_pos(playerPos, *(items[i]->pos)) 
+                && items[i]->collided == 0) {
+            return items[i];
+        }
+    }
+
+return NULL;  
+}
+
+
+void handle_collision(Item *item) {
+    if (item == NULL) return;
+    debug_item(*item);
+    // TODO: remove in backend
+    item->collided = 1;
+}
+
+
+void update_pos(Position *des, Direction dir) {
     des->posX += xOffset[dir];
     des->posY += yOffset[dir];
 }
@@ -176,3 +203,36 @@ void debugPos(Position pos) {
     uart_dec(pos.posY);
     uart_puts("]\n");
 }
+
+
+int cmp_pos(Position pos1, Position pos2) {
+    return (pos1.posX == pos2.posX && pos1.posY == pos2.posY);
+}
+
+
+void debug_pos(Position pos){
+    uart_puts("["); uart_dec(pos.posX); uart_puts(","); uart_dec(pos.posY); uart_puts("]\n");
+}
+
+
+void debug_item(Item item) {
+    uart_puts("[Item:");
+    switch (item.id) {
+        case BOMB:
+            uart_puts("Bomb");
+            break;
+        case VISION:
+            uart_puts("Vision");
+            break;
+        default:
+            break;
+    }
+    uart_puts("]\n");
+}
+
+
+
+
+
+
+
