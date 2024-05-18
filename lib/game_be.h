@@ -60,8 +60,8 @@ typedef enum {
 
 typedef struct {
   int level;
-  // int pathColor;
-  const unsigned long *bitmap;
+  unsigned long pathColor;
+  unsigned long *bitmap;
   Item *items[10];
   int itemsSz;
 } Maze;
