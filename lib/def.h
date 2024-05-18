@@ -9,6 +9,7 @@
 #define FG_DEF "\033[37m"
 #define BG_DEF "\033[40m"
 
+
 extern const char *cmdList[];
 extern const char *colorList[];
 extern const char *bgColorList[];
@@ -16,10 +17,21 @@ extern const char *fgColorList[];
 extern const int cmdListSz;
 extern const int colorListSz;
 
-enum Cmd {HELP, CLEAR, IMAGE, VIDEO, FONT, GAME};
+enum Cmd {
+    HELP,
+    CLEAR,
+    IMAGE,
+    VIDEO,
+    FONT,
+    GAME,
+#ifdef DEBUG
+    TOGGLE_FOV
+#endif
+};
 
 // #define FEAT_IMG
 // #define FEAT_VID
+#define DEBUG
 #define FEAT_FONT
 #define FEAT_GAME
 

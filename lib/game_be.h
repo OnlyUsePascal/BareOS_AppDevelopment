@@ -1,6 +1,8 @@
 #ifndef GAME_BE_H
 #define GAME_BE_H
 
+#include "gpio.h"
+
 #define MAZE_SZ_CELL 11 
 
 typedef struct {
@@ -15,7 +17,6 @@ typedef struct {
 typedef struct {
   int posX;
   int posY;
-  
 } Position;
 
 
@@ -60,7 +61,7 @@ typedef enum {
 typedef struct {
   int level;
   // int pathColor;
-  unsigned long *bitmap;
+  const unsigned long *bitmap;
   Item *items[10];
   int itemsSz;
 } Maze;
@@ -68,6 +69,7 @@ typedef struct {
 extern const int xOffset[];
 extern const int yOffset[];
 extern const char directionKey[];
+static uint16_t currentRadius = 100;
 
 void game_enter();
 void game_start();
@@ -75,6 +77,11 @@ void game_continue();
 void game_help();
 void game_exit();
 void clearScreen();
+
+#ifdef DEBUG
+void cli_toggle_fov();
+#endif
+
 Item* detect_collision(Position playerPos, Item *items[], int itemsSz);
 
 

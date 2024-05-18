@@ -21,7 +21,8 @@
     "game_fe.h": "c",
     "math.h": "c",
     "sstream": "c",
-    "player_movement.h": "c"
+    "player_movement.h": "c",
+    "item.h": "c"
   },
   "cmake.configureOnOpen": false
 }
