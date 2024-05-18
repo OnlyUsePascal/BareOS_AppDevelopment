@@ -26,13 +26,15 @@ void drawFOVMovement(Position initialPlayerPosition, Direction dir);
 void removeFOV(const Asset *asset);
 void drawFOV(const Asset *asset);
 
-void drawMovement(Asset *asset, Direction dir, Item *collidedItem);
+void drawMovement(Maze *maze, Asset *asset, Direction dir, Item *collidedItem);
 void removeAsset(const Asset *asset);
 void drawAsset(const Asset *asset);
+void embedAsset(const Maze *maze, const Asset *asset, bool fill);
 void updateAssetPos(Asset *asset, int x, int y);
 
 void posBeToFe(Position *pos, Asset *asset);
 void debugAsset(Asset asset);
+void getMazePathColor(Maze *maze);
 
 void resetScreenDarkness();
 void moreScreenDarkness();

@@ -56,6 +56,7 @@ void game_enter() {
 
 void game_start(){
     uart_puts("Starting Game...\n");
+    bool isFOVShown = true;
     Asset playerAsset = {ASSET_HIDDEN, ASSET_HIDDEN, PLAYER_SZ, PLAYER_SZ, bitmap_player};
     Position playerPos = {0, MAZE_SZ_CELL / 2}; 
     
@@ -67,25 +68,21 @@ void game_start(){
     Position visionPos = {5, 5};
     Item vision = {&visionAsset, &visionPos, VISION, 0};
     
-    Maze maze1 = {1, bitmap_maze, {&bomb, &vision}, 2};
+    Maze maze1 = {1, -1, bitmap_maze, {&bomb, &vision}, 2};
     
-    bool isFOVShown = true;
+    getMazePathColor(&maze1);
+    uart_puts("[maze path color: "); uart_hex(maze1.pathColor); uart_puts("]\n"); 
     
     // TODO: for loop for every maze item ?
     posBeToFe(&playerPos, &playerAsset);
+    
     posBeToFe(&bombPos, &bombAsset);
     posBeToFe(&visionPos, &visionAsset);
     
-    render_scene(&playerAsset, isFOVShown);
-    // TODO: render item
-    // clearScreen();
-    // framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, maze1.bitmap);
-    // drawFOV(playerPos);
-    // drawAsset(&playerAsset); 
-    // drawAsset(&playerAsset);
-    // drawAsset(&bombAsset);
-    // drawAsset(&visionAsset);
+    embedAsset(&maze1, bomb.asset, true);
+    embedAsset(&maze1, vision.asset, true);
     
+    render_scene(&playerAsset, isFOVShown);
     
     // movement 
     while (1) {
@@ -133,7 +130,7 @@ void game_start(){
             
             update_pos(&playerPos, dir);
             Item *collidedItem = detect_collision(playerPos, maze1.items, maze1.itemsSz);
-            drawMovement(&playerAsset, dir, collidedItem);
+            drawMovement(&maze1, &playerAsset, dir, collidedItem);
             handle_collision(collidedItem);
         }
     } 

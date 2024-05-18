@@ -74,6 +74,18 @@ void removeAsset(const Asset *asset) {
 }
 
 
+void embedAsset(const Maze *maze, const Asset *asset, bool fill){
+    for (int i = asset->posX, posX = 0; posX < asset->width; i++, posX++) {
+        for (int j = asset->posY, posY = 0; posY < asset->height; j++, posY++) {
+            if (asset->bitmap[posX + posY * asset->width] != 0)
+                maze->bitmap[i + j * MAZE_SZ] = (fill) ? 
+                                                asset->bitmap[posX + posY * asset->width] 
+                                                : maze->pathColor;
+        }
+    }
+}
+
+
 void drawFOV(const Asset *asset) {
     for (int y = asset->posY - currentRadius; y <= asset->posY + currentRadius; ++y) {
         for (int x = asset->posX - currentRadius; x <= asset->posX + currentRadius; ++x) {
@@ -102,7 +114,7 @@ void removeFOV(const Asset *asset) {
 }
 
 
-void drawMovement(Asset *asset, Direction dir, Item *collidedItem){
+void drawMovement(Maze *maze, Asset *asset, Direction dir, Item *collidedItem){
     // TODO: animation with frame
     int stepOffset = MAZE_SZ_CELL_PIXEL / STEP_AMOUNT;
     int posXFinal = asset->posX + xOffset[dir] * MAZE_SZ_CELL_PIXEL;
@@ -121,38 +133,14 @@ void drawMovement(Asset *asset, Direction dir, Item *collidedItem){
     
     // walk the last step
     removeFOV(asset);
-    // if (collidedItem != NULL) {
-    //     removeAsset(collidedItem->asset); 
-    // }
+    if (collidedItem != NULL) {
+        //replace embeded item with background
+        embedAsset(maze, collidedItem->asset, false); 
+    }
     updateAssetPos(asset, posXFinal, posYFinal);
     drawFOV(asset);
     drawAsset(asset);
 }
-
-
-// void drawFOVMovement(Position initialPlayerPosition, Direction dir) {
-//     // TODO: animation with frame
-//     int step = STEP_AMOUNT;
-//     int stepOffset = MAZE_SZ_CELL_PIXEL / step;
-//     int posXFinal = initialPlayerPosition.posX + xOffset[dir] * MAZE_SZ_CELL_PIXEL;
-//     int posYFinal = initialPlayerPosition.posY + yOffset[dir] * MAZE_SZ_CELL_PIXEL;
-
-//     // walk the middle
-//     for (int i = 0; i < step - 1; i++) {
-//         removeFOV(initialPlayerPosition);
-//         initialPlayerPosition.posX = initialPlayerPosition.posX + xOffset[dir] * stepOffset;
-//         initialPlayerPosition.posY = initialPlayerPosition.posY + yOffset[dir] * stepOffset;
-//         drawFOV(initialPlayerPosition);
-        
-//         wait_msec(62500);
-//     }
-
-//     // walk the last step
-//     removeFOV(initialPlayerPosition);
-//     initialPlayerPosition.posX = posXFinal;
-//     initialPlayerPosition.posY = posYFinal;
-//     drawFOV(initialPlayerPosition);
-// }
 
 
 void moreScreenDarkness() {
@@ -234,3 +222,9 @@ void debugAsset(Asset asset){
     uart_puts("["); uart_dec(asset.posX); uart_puts(","); uart_dec(asset.posY); uart_puts("]\n");
 }
 
+
+void getMazePathColor(Maze *maze){
+    int x = 0 * MAZE_SZ_CELL_PIXEL + (MAZE_SZ_CELL_PIXEL - PLAYER_SZ) / 2;
+    int y = 5 * MAZE_SZ_CELL_PIXEL + (MAZE_SZ_CELL_PIXEL - PLAYER_SZ) / 2;
+    maze->pathColor = maze->bitmap[x + y * MAZE_SZ];
+}
