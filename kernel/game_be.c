@@ -5,6 +5,7 @@
 #include "../lib/font.h"
 #include "../lib/def.h"
 #include "../lib/util_str.h"
+#include "../lib/data/game/game_menu.h"
 #include "../lib/data/game/maze.h"
 #include "../lib/data/game/maze_state.h"
 #include "../lib/data/game/player.h"
@@ -57,12 +58,15 @@ void game_enter() {
 int game_menu_enter() {
     // init
     framebf_init(GAME_W, GAME_H, GAME_W, GAME_H);
+    
+    // // background + headline
+    // clearScreen();
 
-    // background + headline
-    clearScreen();
+    framebf_drawImg(115, 130, GAME_MENU_SZ_W, GAME_MENU_SZ_H, bitmap_game_menu);
+
 
     // menu
-    int menuPosX = 150, menuPosY = 200, yOffset = 50;
+    int menuPosX = 220, menuPosY = 220, yOffset = 50;
     char *opts[] = {"Continue", "Exit to menu"};
     int optSz = sizeof(opts) / sizeof(opts[0]);
 
