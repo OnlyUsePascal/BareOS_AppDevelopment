@@ -64,21 +64,28 @@ void game_start(){
     Position bombPos = {1, 9};
     Item bomb = {&bombAsset, &bombPos, BOMB, 0};
     
+    // TODO: more item
     Asset visionAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_vision};
     Position visionPos = {5, 5};
     Item vision = {&visionAsset, &visionPos, VISION, 0};
+    Asset portalAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_portal};
+    Position portalPos = {7, 5};
+    Item portal = {&portalAsset, &portalPos, PORTAL, 0};
     
-    Maze maze1 = {1, -1, bitmap_maze, {&bomb, &vision}, 2};
+    Maze maze1 = {1, -1, bitmap_maze, {&bomb, &vision, &portal}, 3};
     getMazePathColor(&maze1);
     
-    // TODO: for loop for every maze item ?
+    
     posBeToFe(&playerPos, &playerAsset);
     
+    // TODO: init loop for every maze item ?
     posBeToFe(&bombPos, &bombAsset);
     posBeToFe(&visionPos, &visionAsset);
+    posBeToFe(&portalPos, &portalAsset);
     
     embedAsset(&maze1, bomb.asset, true);
     embedAsset(&maze1, vision.asset, true);
+    embedAsset(&maze1, portal.asset, true);
     
     render_scene(&maze1, &playerAsset, isFOVShown);
     
@@ -128,8 +135,9 @@ void game_start(){
             
             update_pos(&playerPos, dir);
             Item *collidedItem = detect_collision(playerPos, maze1.items, maze1.itemsSz);
-            drawMovement(&maze1, &playerAsset, dir, collidedItem);
+            // TODO: item collision
             handle_collision(collidedItem);
+            drawMovement(&maze1, &playerAsset, dir, collidedItem);
         }
     } 
 }
@@ -152,7 +160,18 @@ void game_exit() {
 }
 
 
-// ===============================
+// ============================== GAME ITEM
+
+
+
+
+
+
+
+
+
+
+// =============================== GAME FLOW
 void render_scene(const Maze *maze, const const Asset *asset, const bool isFOVShown) {
     if (!isFOVShown) {
         framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
@@ -179,9 +198,12 @@ return NULL;
 
 void handle_collision(Item *item) {
     if (item == NULL) return;
+    
     debug_item(*item);
     // TODO: remove in backend
     item->collided = 1;
+    
+    // switch
 }
 
 
@@ -218,6 +240,9 @@ void debug_item(Item item) {
             break;
         case VISION:
             uart_puts("Vision");
+            break;
+        case PORTAL:
+            uart_puts("Portal");
             break;
         default:
             break;

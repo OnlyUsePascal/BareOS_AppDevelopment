@@ -24,7 +24,7 @@ typedef enum {
   TRAP,
   BOMB,
   VISION,
-  COIN
+  PORTAL,
 } ItemId;
 
 
