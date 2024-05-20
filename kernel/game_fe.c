@@ -25,23 +25,23 @@ void drawMenu(int posX, int posY, int spacing, char *opts[], int optSz){
 }
 
 
-int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz) {
+int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz, const unsigned int foregnd, const unsigned int backgnd) {
     int actionIdx = 0;
-    font_drawChar(markPosX, markPosY, '>', MENU_FOREGND, 2);
+    font_drawChar(markPosX, markPosY, '>', foregnd, 2);
 
     while (1) {
         char c = uart_getc();
         uart_sendc(c);
         uart_sendc('\n');
         if (c == 'w' || c == 'a') {
-            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', MENU_BACKGND, 2);
+            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', backgnd, 2);
             actionIdx = (actionIdx - 1) % optSz;
             if (actionIdx < 0) actionIdx += optSz;
-            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', MENU_FOREGND, 2);
+            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', foregnd, 2);
         } else if (c == 's' || c == 'd') {
-            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', MENU_BACKGND, 2);
+            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', backgnd, 2);
             actionIdx = (actionIdx + 1) % optSz;
-            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', MENU_FOREGND, 2);
+            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', foregnd, 2);
         } else if (c == '\n') {
             break;
         }

@@ -31,7 +31,7 @@ void game_enter() {
 
     while (1) {
         drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
-        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz);
+        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz, MENU_FOREGND, MENU_BACKGND);
 
         switch (optIdx) {
             case 0: //start
@@ -59,11 +59,7 @@ int game_menu_enter() {
     // init
     framebf_init(GAME_W, GAME_H, GAME_W, GAME_H);
     
-    // // background + headline
-    // clearScreen();
-
     framebf_drawImg(115, 130, GAME_MENU_SZ_W, GAME_MENU_SZ_H, bitmap_game_menu);
-
 
     // menu
     int menuPosX = 220, menuPosY = 220, yOffset = 50;
@@ -71,8 +67,9 @@ int game_menu_enter() {
     int optSz = sizeof(opts) / sizeof(opts[0]);
 
     while (1) {
+        
         drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
-        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz);
+        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz, MENU_FOREGND, GAME_MENU_BACKGND);
 
         switch (optIdx) {
             case 0: //start
