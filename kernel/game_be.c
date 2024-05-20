@@ -10,7 +10,7 @@
 #include "../lib/data/game/player.h"
 #include "../lib/data/game/item.h"
 #include "../lib/data/game/player_movement.h"
-#include "lib/data/data_menu_background.h"
+#include "../lib/data/data_menu_background.h"
 
 // ===== BACK-END =====
 const char directionKey[] = {'w', 'a', 's', 'd'};
