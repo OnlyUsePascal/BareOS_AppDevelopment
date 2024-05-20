@@ -3,23 +3,20 @@
 
 #include "gpio.h"
 
-#define MAZE_SZ_CELL 11
-#define MAZE_SZ_CELL_PIXEL 40 
-#define PLAYER_SZ 20
+#define MAZE_SZ_CELL 11 
 
 typedef struct {
   int posX; // x in maze
   int posY; // y in maze
-  int width;
-  int height;
+  int width; 
+  int height; 
   unsigned long *bitmap;
-} Asset;
+} Asset; 
 
 
 typedef struct {
   int posX;
   int posY;
-  
 } Position;
 
 
@@ -63,7 +60,7 @@ typedef enum {
 
 typedef struct {
   int level;
-  // int pathColor;
+  unsigned long pathColor;
   unsigned long *bitmap;
   Item *items[10];
   int itemsSz;

@@ -1,3 +1,5 @@
+#include "../lib/game_be.h"
+
 #ifndef GAME_FE
 #define GAME_FE
 
@@ -11,7 +13,7 @@
 #define MAZE_SZ 440
 #define ASSET_HIDDEN -1
 
-#define MAZE_SZ_CELL_PIXEL 40
+#define MAZE_SZ_CELL_PIXEL 40 
 #define PLAYER_SZ 20
 #define ITEM_SZ 20
 
@@ -19,23 +21,27 @@
 void clearScreen();
 void drawMenu(int posX, int posY, int yOffset, char *opts[], int optSz);
 int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz);
-void updateAssetPos(Asset *asset, int x, int y);
-void drawMovement(Asset *asset, Direction dir);
+
 void drawFOVMovement(Position initialPlayerPosition, Direction dir);
+void removeFOV(const Asset *asset);
+void drawFOV(const Maze *maze, const Asset *asset);
+
+void drawMovement(Maze *maze, Asset *asset, Direction dir, Item *collidedItem);
 void removeAsset(const Asset *asset);
 void drawAsset(const Asset *asset);
-void removeFOV(const Position playerPos);
-void drawFOV(const Position playerPos);
+void embedAsset(const Maze *maze, const Asset *asset, bool fill);
+void updateAssetPos(Asset *asset, int x, int y);
 
 void posBeToFe(Position *pos, Asset *asset);
 void debugAsset(Asset asset);
+void getMazePathColor(Maze *maze);
 
-void resetScreenDarkness();
-void moreScreenDarkness();
+void adjustBrightness(const Maze *maze, const Asset *asset, bool darken);
+uint64_t darkenPixel(uint64_t color, const float factor);
 
 extern float cur_darken;
-extern float darken_factor;
+extern const float darken_factor;
 extern float cur_lighten;
-extern float lighten_factor;
+extern const float lighten_factor;
 
 #endif
