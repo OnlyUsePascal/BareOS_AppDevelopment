@@ -54,6 +54,36 @@ void game_enter() {
 }
 
 
+int game_menu_enter() {
+    // init
+    framebf_init(GAME_W, GAME_H, GAME_W, GAME_H);
+
+    // background + headline
+    clearScreen();
+
+    // menu
+    int menuPosX = 150, menuPosY = 200, yOffset = 50;
+    char *opts[] = {"Continue", "Exit to menu"};
+    int optSz = sizeof(opts) / sizeof(opts[0]);
+
+    while (1) {
+        drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
+        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz);
+
+        switch (optIdx) {
+            case 0: //start
+                return 0;
+                break;
+
+            case 1: //exit to menu
+                return 1;
+                break;
+        }
+
+    }
+}
+
+
 void game_start(){
     uart_puts("Starting Game...\n");
     bool isFOVShown = true;
@@ -95,10 +125,20 @@ void game_start(){
         else if(c == 'p'){
             adjustBrightness(&maze1, &playerAsset, false);
         } 
-        else if (c == 27) {
-            //TODO: temporary escape to menu
-            clearScreen();
-            break;      
+        else if (c == 27) { // game menu
+            int game_stage = game_menu_enter();   
+            switch (game_stage)
+            {
+            case 0:
+              render_scene(&maze1, &playerAsset, isFOVShown);
+              break;
+  
+            case 1:
+              game_enter();
+              return;
+              break;
+            }
+            // str_debug_num(game_stage);
         } 
         else if (c == 'k') {
             isFOVShown = !isFOVShown;
