@@ -10,6 +10,7 @@
 #include "../lib/data/game/player.h"
 #include "../lib/data/game/item.h"
 #include "../lib/data/game/player_movement.h"
+#include "lib/data/data_menu_background.h"
 
 // ===== BACK-END =====
 const char directionKey[] = {'w', 'a', 's', 'd'};
@@ -20,11 +21,10 @@ void game_enter() {
     // init
     framebf_init(GAME_W, GAME_H, GAME_W, GAME_H);
 
-    // background + headline
-    clearScreen();
+    framebf_drawImg(0, 0, MENU_BACKGROUND_SIZE, MENU_BACKGROUND_SIZE, bitmap_menu_background);
 
     // menu
-    int menuPosX = 150, menuPosY = 200, yOffset = 50;
+    int menuPosX = 220, menuPosY = 250, yOffset = 50;
     char *opts[] = {"Start", "Continue", "How To Play?", "Exit"};
     int optSz = sizeof(opts) / sizeof(opts[0]);
 

@@ -28,7 +28,7 @@ set(SRC_FILES
         ${SRC_DIR}/boot.S
         ${SRC_DIR}/def.c
         ${SRC_DIR}/font.c
-        ${SRC_DIR}/math.c
+        ${SRC_DIR}/maze.c
         ${SRC_DIR}/framebf.c
         ${SRC_DIR}/image.c
         ${SRC_DIR}/game_be.c
