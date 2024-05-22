@@ -58,28 +58,28 @@ void game_start(){
     uart_puts("Starting Game...\n");
     bool isFOVShown = true;
     Asset playerAsset = {ASSET_HIDDEN, ASSET_HIDDEN, PLAYER_SZ, PLAYER_SZ, bitmap_player};
-    Position playerPos = {0, MAZE_SZ_CELL / 2}; 
-    
+    Position playerPos = {0, MAZE_SZ_CELL / 2};
+
     Asset bombAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_bomb};
     Position bombPos = {1, 9};
     Item bomb = {&bombAsset, &bombPos, BOMB, 0};
-    
+
     Asset visionAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_vision};
     Position visionPos = {5, 5};
     Item vision = {&visionAsset, &visionPos, VISION, 0};
-    
+
     Maze maze1 = {1, -1, bitmap_maze, {&bomb, &vision}, 2};
     getMazePathColor(&maze1);
-    
+
     // TODO: for loop for every maze item ?
     posBeToFe(&playerPos, &playerAsset);
-    
+
     posBeToFe(&bombPos, &bombAsset);
     posBeToFe(&visionPos, &visionAsset);
-    
+
     embedAsset(&maze1, bomb.asset, true);
     embedAsset(&maze1, vision.asset, true);
-    
+
     render_scene(&maze1, &playerAsset, isFOVShown);
     
     // movement 
@@ -153,7 +153,7 @@ void game_exit() {
 
 
 // ===============================
-void render_scene(const Maze *maze, const const Asset *asset, const bool isFOVShown) {
+void render_scene(const Maze *maze, const Asset *asset, const bool isFOVShown) {
     if (!isFOVShown) {
         framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
     } else {

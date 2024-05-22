@@ -3,7 +3,7 @@
 
 #include "gpio.h"
 
-#define STEP 10
+#define STEP 4
 
 typedef enum img_direction {
     IMG_UP = 'w',
