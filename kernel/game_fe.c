@@ -4,6 +4,7 @@
 #include "../lib/def.h"
 #include "../lib/framebf.h"
 #include "../lib/data/game/maze.h"
+#include "../lib/data/game/player_movement.h"
 
 #define STEP_AMOUNT 3
 
@@ -114,34 +115,82 @@ void removeFOV(const Asset *asset) {
 }
 
 
-void drawMovement(Maze *maze, Asset *asset, Direction dir, Item *collidedItem){
+void drawMovement(Maze *maze, Asset *playerAsset, Direction dir, Item *collidedItem){
     // TODO: animation with frame
     int stepOffset = MAZE_SZ_CELL_PIXEL / STEP_AMOUNT;
-    int posXFinal = asset->posX + xOffset[dir] * MAZE_SZ_CELL_PIXEL;
-    int posYFinal = asset->posY + yOffset[dir] * MAZE_SZ_CELL_PIXEL;
+    int posXFinal = playerAsset->posX + xOffset[dir] * MAZE_SZ_CELL_PIXEL;
+    int posYFinal = playerAsset->posY + yOffset[dir] * MAZE_SZ_CELL_PIXEL;
     
     // walk the middle
     for (int i = 0 ; i < STEP_AMOUNT - 1; i++){
         // removeAsset(playerAsset);
-        removeFOV(asset);
-        updateAssetPos(asset, asset->posX + xOffset[dir] * stepOffset, 
-                            asset->posY + yOffset[dir] * stepOffset);
-        drawFOV(maze, asset);
-        drawAsset(asset);
-        wait_msec(62500);
+        removeFOV(playerAsset);
+        updateAssetPos(playerAsset, playerAsset->posX + xOffset[dir] * stepOffset, 
+                            playerAsset->posY + yOffset[dir] * stepOffset);
+        drawFOV(maze, playerAsset);
+        drawMoveAnimation(playerAsset, dir, i);
+        wait_msec(500000);
     }
     
     // walk the last step
-    removeFOV(asset);
+    removeFOV(playerAsset);
     if (collidedItem != NULL) {
         //replace embeded item with background
         embedAsset(maze, collidedItem->asset, false); 
     }
-    updateAssetPos(asset, posXFinal, posYFinal);
-    drawFOV(maze, asset);
-    drawAsset(asset);
+    updateAssetPos(playerAsset, posXFinal, posYFinal);
+    drawFOV(maze, playerAsset);
+    drawMoveAnimation(playerAsset, dir, STEP_AMOUNT - 1);
 }
 
+void drawMoveAnimation(Asset *playerAsset, Direction dir ,int order){
+    switch (dir)
+    {
+    case RIGHT:
+        if(order == 0){
+            playerAsset->bitmap = bitmap_figure_go_right_1;
+        } else if(order == 1){
+            playerAsset->bitmap = bitmap_figure_go_right_3;
+        }
+        else{
+            playerAsset->bitmap = bitmap_figure_go_right_2;
+        }
+        break;
+    case LEFT:
+        if(order == 0){
+            playerAsset->bitmap = bitmap_figure_go_left_1;
+        } else if(order == 1){
+            playerAsset->bitmap = bitmap_figure_go_left_3;
+        }
+        else{
+            playerAsset->bitmap = bitmap_figure_go_left_2;
+        }
+        break;
+    case UP:
+        if(order == 0){
+            playerAsset->bitmap = bitmap_figure_go_up_1;
+        } else if(order == 1){
+            playerAsset->bitmap = bitmap_figure_go_up_3;
+        }
+        else{
+            playerAsset->bitmap = bitmap_figure_go_up_2;
+        }
+        break;
+    case DOWN:
+        if(order == 0){
+            playerAsset->bitmap = bitmap_figure_go_down_1;
+        } else if(order == 1){
+            playerAsset->bitmap = bitmap_figure_go_down_3;
+        }
+        else{
+            playerAsset->bitmap = bitmap_figure_go_down_2;
+        }
+        break;
+    default:
+        break;
+    }
+    drawAsset(playerAsset);
+}
 
 void adjustBrightness(const Maze *maze, const Asset *asset, bool darken) {
     cur_darken = (darken) ? max_f(cur_darken * darken_factor, 0) 

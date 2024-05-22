@@ -14,7 +14,7 @@
 #define ASSET_HIDDEN -1
 
 #define MAZE_SZ_CELL_PIXEL 40 
-#define PLAYER_SZ 20
+#define PLAYER_SZ 30
 #define ITEM_SZ 20
 
 
@@ -31,7 +31,7 @@ void removeAsset(const Asset *asset);
 void drawAsset(const Asset *asset);
 void embedAsset(const Maze *maze, const Asset *asset, bool fill);
 void updateAssetPos(Asset *asset, int x, int y);
-
+void drawMoveAnimation(Asset *playerAsset, Direction dir, int order);
 void posBeToFe(Position *pos, Asset *asset);
 void debugAsset(Asset asset);
 void getMazePathColor(Maze *maze);
