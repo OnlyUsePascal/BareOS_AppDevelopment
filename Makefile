@@ -30,4 +30,4 @@ clean:
 
 # Run emulation with QEMU
 run:
-	qemu-system-aarch64 -M raspi3 -kernel $(DIR_BUI)/kernel8.img -serial stdio
+	qemu-system-aarch64 -M raspi3b -kernel $(DIR_BUI)/kernel8.img -serial stdio

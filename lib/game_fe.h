@@ -26,6 +26,9 @@ void drawFOVMovement(Position initialPlayerPosition, Direction dir);
 void removeFOV(const Asset *asset);
 void drawFOV(const Maze *maze, const Asset *asset);
 
+void drawDialog(const char *title, const char *text);
+void removeDialog(const Position *pos);
+
 void drawMovement(Maze *maze, Asset *asset, Direction dir, Item *collidedItem);
 void removeAsset(const Asset *asset);
 void drawAsset(const Asset *asset);

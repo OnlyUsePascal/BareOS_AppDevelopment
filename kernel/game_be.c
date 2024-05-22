@@ -2,7 +2,6 @@
 #include "../lib/game_be.h"
 #include "../lib/game_fe.h"
 #include "../lib/framebf.h"
-#include "../lib/font.h"
 #include "../lib/def.h"
 #include "../lib/util_str.h"
 #include "../lib/data/game/maze.h"
@@ -54,7 +53,7 @@ void game_enter() {
 }
 
 
-void game_start(){
+void game_start() {
     uart_puts("Starting Game...\n");
     bool isFOVShown = true;
     Asset playerAsset = {ASSET_HIDDEN, ASSET_HIDDEN, PLAYER_SZ, PLAYER_SZ, bitmap_player};
@@ -63,12 +62,20 @@ void game_start(){
     Asset bombAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_bomb};
     Position bombPos = {1, 9};
     Item bomb = {&bombAsset, &bombPos, BOMB, 0};
-    
+
     Asset visionAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_vision};
     Position visionPos = {5, 5};
     Item vision = {&visionAsset, &visionPos, VISION, 0};
-    
-    Maze maze1 = {1, -1, bitmap_maze, {&bomb, &vision}, 2};
+
+    Item *maze_items[] = {&bomb, &vision};
+
+    Maze maze1 = {
+        .level = 1,
+        .pathColor = (unsigned long) -1,
+        .bitmap = bitmap_maze,
+        .items = maze_items,
+        .itemsSz = 2
+    };
     getMazePathColor(&maze1);
     
     // TODO: for loop for every maze item ?
@@ -153,7 +160,7 @@ void game_exit() {
 
 
 // ===============================
-void render_scene(const Maze *maze, const const Asset *asset, const bool isFOVShown) {
+void render_scene(const Maze *maze, const Asset *asset, const bool isFOVShown) {
     if (!isFOVShown) {
         framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
     } else {
@@ -178,12 +185,41 @@ return NULL;
 
 
 void handle_collision(Item *item) {
+    static unsigned char seeing_item_first_time = 0;
+
+    static const char *item_names[] = {
+        "TRAP",
+        "BOMB",
+        "VISION",
+        "COIN"
+    };
+
+    static const char *item_descs[] = {
+        "TRAP DESCRIPTION",
+        "BOMB DESCRIPTION",
+        "VISION DESCRIPTION",
+        "COIN DESCRIPTION",
+    };
+
     if (item == NULL) return;
+
+    if (!(seeing_item_first_time & (1 << item->id))) {
+        seeing_item_first_time |= (1 << item->id);
+
+        drawDialog(item_names[item->id], item_descs[item->id]);
+        while (true) {
+            char c = uart_getc();
+            if (c == '\n') {
+                removeDialog(item->pos);
+                break;
+            }
+        }
+    }
+
     debug_item(*item);
     // TODO: remove in backend
     item->collided = 1;
 }
-
 
 void update_pos(Position *des, Direction dir) {
     des->posX += xOffset[dir];

@@ -1,3 +1,6 @@
+#ifndef DATA_FONT2_H
+#define DATA_FONT2_H
+
 enum {
     FONT2_WIDTH     = 8,  // Width in pixels
     FONT2_HEIGHT    = 8,  // Height in pixel
@@ -6,7 +9,7 @@ enum {
     FONT2_NUMGLYPHS = 127 // Total number of characters in the font
 };
 
-unsigned char font2[FONT2_NUMGLYPHS][FONT2_BPG] = {
+static const unsigned char font2[FONT2_NUMGLYPHS][FONT2_BPG] = {
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},   // U+0000 (nul)
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},   // U+0001
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},   // U+0002
@@ -135,3 +138,5 @@ unsigned char font2[FONT2_NUMGLYPHS][FONT2_BPG] = {
     {0x00, 0x1E, 0x10, 0x70, 0x10, 0x08, 0x06, 0x00},           // 125 (})
     {0x00, 0x06, 0x2A, 0x30, 0x00, 0x00, 0x00, 0x00},           // 126 (~)
 };
+
+#endif
