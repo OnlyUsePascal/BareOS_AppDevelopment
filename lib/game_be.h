@@ -69,6 +69,7 @@ typedef struct {
 extern const int xOffset[];
 extern const int yOffset[];
 extern const char directionKey[];
+extern Maze mazes[];
 static uint16_t currentRadius = 100;
 
 void game_enter();
