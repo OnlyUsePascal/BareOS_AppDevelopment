@@ -2,7 +2,6 @@
 #include "../lib/game_be.h"
 #include "../lib/game_fe.h"
 #include "../lib/framebf.h"
-#include "../lib/font.h"
 #include "../lib/def.h"
 #include "../lib/util_str.h"
 #include "../lib/data/game/game_menu.h"
@@ -20,7 +19,6 @@ const int xOffset[] = {0, -1, 0, 1};
 void game_enter() {
     // init
     framebf_init(GAME_W, GAME_H, GAME_W, GAME_H);
-
     framebf_drawImg(0, 0, MENU_BACKGROUND_SIZE, MENU_BACKGROUND_SIZE, bitmap_menu_background);
 
     // menu
@@ -57,7 +55,6 @@ void game_enter() {
 int game_menu_enter() {
     // init
     framebf_init(GAME_W, GAME_H, GAME_W, GAME_H);
-    
     framebf_drawImg(115, 130, GAME_MENU_SZ_W, GAME_MENU_SZ_H, bitmap_game_menu);
 
     // menu
@@ -66,7 +63,6 @@ int game_menu_enter() {
     int optSz = sizeof(opts) / sizeof(opts[0]);
 
     while (1) {
-        
         drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
         int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz, MENU_FOREGND, GAME_MENU_BACKGND);
 
@@ -79,7 +75,6 @@ int game_menu_enter() {
                 return 1;
                 break;
         }
-
     }
 }
 
@@ -106,7 +101,6 @@ void game_start(){
 
     posBeToFe(&bombPos, &bombAsset);
     posBeToFe(&visionPos, &visionAsset);
-
     embedAsset(&maze1, bomb.asset, true);
     embedAsset(&maze1, vision.asset, true);
 
@@ -127,16 +121,14 @@ void game_start(){
         } 
         else if (c == 27) { // game menu
             int game_stage = game_menu_enter();   
-            switch (game_stage)
-            {
+            switch (game_stage) {
             case 0:
-              render_scene(&maze1, &playerAsset, isFOVShown);
-              break;
-  
+                render_scene(&maze1, &playerAsset, isFOVShown);
+                break;
             case 1:
-              game_enter();
-              return;
-              break;
+                clearScreen();
+                framebf_drawImg(0, 0, MENU_BACKGROUND_SIZE, MENU_BACKGROUND_SIZE, bitmap_menu_background);
+                return;
             }
             // str_debug_num(game_stage);
         } 
@@ -169,7 +161,7 @@ void game_start(){
             update_pos(&playerPos, dir);
             Item *collidedItem = detect_collision(playerPos, maze1.items, maze1.itemsSz);
             drawMovement(&maze1, &playerAsset, dir, collidedItem);
-            handle_collision(collidedItem);
+            handle_collision(collidedItem, &maze1, &playerAsset);
         }
     } 
 }
@@ -212,16 +204,44 @@ Item* detect_collision(Position playerPos, Item *items[], int itemsSz) {
             return items[i];
         }
     }
-
-return NULL;  
+    return NULL;  
 }
 
 
-void handle_collision(Item *item) {
+void handle_collision(Item *item, Maze *maze, Asset *playerAsset) {
     if (item == NULL) return;
+
+    static unsigned char seeing_item_first_time = 0;
+    static const char *item_names[] = {
+        "TRAP",
+        "BOMB",
+        "VISION",
+        "COIN"
+    };
+    static const char *item_descs[] = {
+        "TRAP DESCRIPTION",
+        "BOMB DESCRIPTION",
+        "VISION DESCRIPTION",
+        "COIN DESCRIPTION",
+    };
+    
     debug_item(*item);
-    // TODO: remove in backend
     item->collided = 1;
+
+    if (!(seeing_item_first_time & (1 << item->id))) {
+        seeing_item_first_time |= (1 << item->id);
+
+        drawDialog(item_names[item->id], item_descs[item->id]);
+        while (true) {
+            char c = uart_getc();
+            if (c == '\n') {
+                // removeDialog(item->pos);
+                render_scene(maze, playerAsset, true);
+                return;
+            }
+        }
+    }
+
 }
 
 
