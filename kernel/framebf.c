@@ -1,5 +1,6 @@
 #include "../lib/framebf.h"
 #include "../lib/game_fe.h"
+#include "../lib/util_str.h"
 // #include "../lib/math.h"
 
 // Use RGBA32 (32 bits for each pixel)
@@ -84,6 +85,28 @@ void framebf_init(int phyW, int phyH, int virW, int virH) {
   }
 }
 
+void framebf_setVirtualOffset(const uint32_t x, const uint32_t y) {
+    mBuf[0] = 7 * 4;             // Length of message in bytes
+    mBuf[1] = MBOX_REQUEST;
+
+    mBuf[2] = MBOX_TAG_SETVIRTOFF; // Set virtual offset
+    mBuf[3] = 8;
+    mBuf[4] = 0;
+    mBuf[5] = x;                   // x offset
+    mBuf[6] = y;                   // y offset
+
+    if (
+        mbox_call(ADDR(mBuf), MBOX_CH_PROP) &&
+        mBuf[5] == x &&
+        mBuf[6] == y
+    ) {
+        str_debug("virtual offset moved successfully");
+        str_debug("w_offset: ");
+        str_debug_num(x);
+        str_debug("h_offset: ");
+        str_debug_num(y);
+    }
+}
 
 void framebf_drawPixel(int x, int y, unsigned int attr) {
   int offs = (y * pitch) + (COLOR_DEPTH / 8 * x);

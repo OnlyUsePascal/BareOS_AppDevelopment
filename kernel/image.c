@@ -7,13 +7,7 @@
 #include "../lib/utils.h"
 
 static const uint64_t *img_data;
-static long w_offset = 0, h_offset = 0, w_img, h_img;
-
-inline bool check_bounds(const long offset, const long max) {
-        str_debug_num(abs(offset));
-        str_debug_num(max);
-        return abs(offset) < max;
-}
+static uint32_t w_offset = 0, h_offset = 0, w_img, h_img;
 
 extern void draw_picture(const uint64_t *img, const uint64_t w, const uint64_t h) {
         if (img != NULL) {
@@ -23,7 +17,7 @@ extern void draw_picture(const uint64_t *img, const uint64_t w, const uint64_t h
                 h_img = h;
                 img_data = img;
 
-                framebf_init(GAME_W, GAME_H, GAME_W, GAME_H);
+                framebf_init(GAME_W, GAME_H, w_img, h_img);
         }
 
         str_debug("w_offset: ");
@@ -36,32 +30,32 @@ extern void draw_picture(const uint64_t *img, const uint64_t w, const uint64_t h
 
 extern void move_picture(const img_direction d) {
         switch (d) {
-                case IMG_UP: {
-                        if (h_offset < 0) {
+                case IMG_DOWN: {
+                        if (h_offset < (h_img - GAME_H) / 2) {
                                 h_offset += STEP;
                         } else {
                                 return;
                         }
 
                         break;
-                } case IMG_DOWN: {
-                        if (abs(h_offset) < ((h_img - GAME_H) / 2)) {
+                } case IMG_UP: {
+                        if (h_offset > 0) {
                                 h_offset -= STEP;
                         } else {
                                 return;
                         }
 
                         break;
-                } case IMG_LEFT: {
-                        if (w_offset < 0) {
+                } case IMG_RIGHT: {
+                        if (w_offset < (w_img - GAME_W) / 2) {
                                 w_offset += STEP;
                         } else {
                                 return;
                         }
 
                         break;
-                } case IMG_RIGHT: {
-                        if (abs(w_offset) < ((w_img - GAME_W) / 2)) {
+                } case IMG_LEFT: {
+                        if (w_offset > 0) {
                                 w_offset -= STEP;
                         } else {
                                 return;
@@ -73,6 +67,7 @@ extern void move_picture(const img_direction d) {
                 }
         }
 
-        draw_picture(NULL, w_img, h_img);
+//    draw_picture(NULL, w_offset, h_offset);
+    framebf_setVirtualOffset(w_offset, h_offset);
 }
 

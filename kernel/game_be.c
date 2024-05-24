@@ -4,11 +4,11 @@
 #include "../lib/framebf.h"
 #include "../lib/def.h"
 #include "../lib/util_str.h"
+#include "../lib/data/game/game_menu.h"
 #include "../lib/data/game/maze.h"
 #include "../lib/data/game/maze_state.h"
 #include "../lib/data/game/player.h"
 #include "../lib/data/game/item.h"
-#include "../lib/data/game/player_movement.h"
 #include "../lib/data/data_menu_background.h"
 
 // ===== BACK-END =====
@@ -19,7 +19,6 @@ const int xOffset[] = {0, -1, 0, 1};
 void game_enter() {
     // init
     framebf_init(GAME_W, GAME_H, GAME_W, GAME_H);
-
     framebf_drawImg(0, 0, MENU_BACKGROUND_SIZE, MENU_BACKGROUND_SIZE, bitmap_menu_background);
 
     // menu
@@ -29,7 +28,7 @@ void game_enter() {
 
     while (1) {
         drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
-        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz);
+        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz, MENU_FOREGND, MENU_BACKGND);
 
         switch (optIdx) {
             case 0: //start
@@ -53,12 +52,39 @@ void game_enter() {
 }
 
 
-void game_start() {
+int game_menu_enter() {
+    // init
+    framebf_init(GAME_W, GAME_H, GAME_W, GAME_H);
+    framebf_drawImg(115, 130, GAME_MENU_SZ_W, GAME_MENU_SZ_H, bitmap_game_menu);
+
+    // menu
+    int menuPosX = 220, menuPosY = 220, yOffset = 50;
+    char *opts[] = {"Continue", "Exit to menu"};
+    int optSz = sizeof(opts) / sizeof(opts[0]);
+
+    while (1) {
+        drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
+        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz, MENU_FOREGND, GAME_MENU_BACKGND);
+
+        switch (optIdx) {
+            case 0: //start
+                return 0;
+                break;
+
+            case 1: //exit to menu
+                return 1;
+                break;
+        }
+    }
+}
+
+
+void game_start(){
     uart_puts("Starting Game...\n");
     bool isFOVShown = true;
     Asset playerAsset = {ASSET_HIDDEN, ASSET_HIDDEN, PLAYER_SZ, PLAYER_SZ, bitmap_player};
-    Position playerPos = {0, MAZE_SZ_CELL / 2}; 
-    
+    Position playerPos = {0, MAZE_SZ_CELL / 2};
+
     Asset bombAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_bomb};
     Position bombPos = {1, 9};
     Item bomb = {&bombAsset, &bombPos, BOMB, 0};
@@ -67,26 +93,17 @@ void game_start() {
     Position visionPos = {5, 5};
     Item vision = {&visionAsset, &visionPos, VISION, 0};
 
-    Item *maze_items[] = {&bomb, &vision};
-
-    Maze maze1 = {
-        .level = 1,
-        .pathColor = (unsigned long) -1,
-        .bitmap = bitmap_maze,
-        .items = maze_items,
-        .itemsSz = 2
-    };
+    Maze maze1 = {1, -1, bitmap_maze, {&bomb, &vision}, 2};
     getMazePathColor(&maze1);
-    
+
     // TODO: for loop for every maze item ?
     posBeToFe(&playerPos, &playerAsset);
-    
+
     posBeToFe(&bombPos, &bombAsset);
     posBeToFe(&visionPos, &visionAsset);
-    
     embedAsset(&maze1, bomb.asset, true);
     embedAsset(&maze1, vision.asset, true);
-    
+
     render_scene(&maze1, &playerAsset, isFOVShown);
     
     // movement 
@@ -102,10 +119,18 @@ void game_start() {
         else if(c == 'p'){
             adjustBrightness(&maze1, &playerAsset, false);
         } 
-        else if (c == 27) {
-            //TODO: temporary escape to menu
-            clearScreen();
-            break;      
+        else if (c == 27) { // game menu
+            int game_stage = game_menu_enter();   
+            switch (game_stage) {
+            case 0:
+                render_scene(&maze1, &playerAsset, isFOVShown);
+                break;
+            case 1:
+                clearScreen();
+                framebf_drawImg(0, 0, MENU_BACKGROUND_SIZE, MENU_BACKGROUND_SIZE, bitmap_menu_background);
+                return;
+            }
+            // str_debug_num(game_stage);
         } 
         else if (c == 'k') {
             isFOVShown = !isFOVShown;
@@ -136,7 +161,7 @@ void game_start() {
             update_pos(&playerPos, dir);
             Item *collidedItem = detect_collision(playerPos, maze1.items, maze1.itemsSz);
             drawMovement(&maze1, &playerAsset, dir, collidedItem);
-            handle_collision(collidedItem);
+            handle_collision(collidedItem, &maze1, &playerAsset);
         }
     } 
 }
@@ -179,29 +204,29 @@ Item* detect_collision(Position playerPos, Item *items[], int itemsSz) {
             return items[i];
         }
     }
-
-return NULL;  
+    return NULL;  
 }
 
 
-void handle_collision(Item *item) {
-    static unsigned char seeing_item_first_time = 0;
+void handle_collision(Item *item, Maze *maze, Asset *playerAsset) {
+    if (item == NULL) return;
 
+    static unsigned char seeing_item_first_time = 0;
     static const char *item_names[] = {
         "TRAP",
         "BOMB",
         "VISION",
         "COIN"
     };
-
     static const char *item_descs[] = {
         "TRAP DESCRIPTION",
         "BOMB DESCRIPTION",
         "VISION DESCRIPTION",
         "COIN DESCRIPTION",
     };
-
-    if (item == NULL) return;
+    
+    debug_item(*item);
+    item->collided = 1;
 
     if (!(seeing_item_first_time & (1 << item->id))) {
         seeing_item_first_time |= (1 << item->id);
@@ -210,16 +235,15 @@ void handle_collision(Item *item) {
         while (true) {
             char c = uart_getc();
             if (c == '\n') {
-                removeDialog(item->pos);
-                break;
+                // removeDialog(item->pos);
+                render_scene(maze, playerAsset, true);
+                return;
             }
         }
     }
 
-    debug_item(*item);
-    // TODO: remove in backend
-    item->collided = 1;
 }
+
 
 void update_pos(Position *des, Direction dir) {
     des->posX += xOffset[dir];
