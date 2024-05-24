@@ -13,11 +13,10 @@
 #define DIALOG_EXIT_MSG "Press Enter to continue"
 #define DIALOG_EXIT_MSG_SIZE 23
 
-float cur_darken = 1.0f; 
-const float darken_factor = 0.8f; 
-float cur_lighten = 1.0f; 
-const float lighten_factor = 1.25f;
+float curDarken = 1.0f; 
+const float darkenFactor = 0.8f; 
 static uint16_t dialog_width = 0;
+
 
 void clearScreen(){
     framebf_drawRect(0, 0, GAME_W, GAME_H, MENU_BACKGND, 1);
@@ -66,20 +65,6 @@ void drawAsset(const Asset *asset) {
 }
 
 
-void removeAsset(const Asset *asset) {
-    //replace with maze pixel
-    // TODO: move to storage files
-    Asset maze = {0, 0, MAZE_SZ_CELL * MAZE_SZ_CELL_PIXEL,
-                  MAZE_SZ_CELL * MAZE_SZ_CELL_PIXEL, bitmap_maze};
-
-    for (int i = asset->posX, posX = 0; posX < asset->width; i++, posX++) {
-        for (int j = asset->posY, posY = 0; posY < asset->height; j++, posY++) {
-            framebf_drawPixel(i, j, maze.bitmap[i + j * maze.width]);
-        }
-    }
-}
-
-
 void embedAsset(const Maze *maze, const Asset *asset, bool fill){
     for (int i = asset->posX, posX = 0; posX < asset->width; i++, posX++) {
         for (int j = asset->posY, posY = 0; posY < asset->height; j++, posY++) {
@@ -100,7 +85,7 @@ void drawFOV(const Maze *maze, const Asset *asset) {
             int dx = x - asset->posX - asset->height/2, dy = y - asset->posY- asset->height/2;
             if (dx * dx + dy * dy <= currentRadius * currentRadius) {
                 if (x >= 0 && y >= 0 && x < MAZE_SZ && y < MAZE_SZ) {
-                    framebf_drawPixel(x, y, darkenPixel(maze->bitmap[y * MAZE_SZ + x], cur_darken));
+                    framebf_drawPixel(x, y, darkenPixel(maze->bitmap[y * MAZE_SZ + x], curDarken));
                 }
             }
         }
@@ -150,6 +135,7 @@ void drawMovement(Maze *maze, Asset *playerAsset, Direction dir, Item *collidedI
     drawMoveAnimation(playerAsset, dir, STEP_AMOUNT - 1);
 }
 
+
 void drawMoveAnimation(Asset *playerAsset, Direction dir ,int order){
     switch (dir) {
     case RIGHT:
@@ -198,21 +184,12 @@ void drawMoveAnimation(Asset *playerAsset, Direction dir ,int order){
     drawAsset(playerAsset);
 }
 
+
 void adjustBrightness(const Maze *maze, const Asset *asset, bool darken) {
-    cur_darken = (darken) ? max_f(cur_darken * darken_factor, 0) 
-                        : min_f(cur_darken / darken_factor, 1);
+    curDarken = (darken) ? max_f(curDarken * darkenFactor, 0) 
+                        : min_f(curDarken / darkenFactor, 1);
     drawFOV(maze, asset);
     drawAsset(asset);
-}
-
-
-void resetScreenDarkness() {
-    for (int i = 0; i < MAZE_SZ; i++){
-        for (int j = 0; j < MAZE_SZ; j++){
-            framebf_drawPixel(
-                i, j, darkenPixel(bitmap_maze[i + j * MAZE_SZ], cur_lighten));
-        }
-    }
 }
 
 
@@ -234,6 +211,7 @@ uint64_t darkenPixel(uint64_t color, const float factor) {
     // Combine the RGB values back into a single color value
     return ((r << 16) | (g << 8) | b);
 }
+
 
 void drawDialog(const char *title, const char *text) {
     uint16_t title_width = font_string_width(str_len(title), FONT_WIDTH);
@@ -281,25 +259,6 @@ void drawDialog(const char *title, const char *text) {
     );
 }
 
-void removeDialog(const Position *pos) {//replace with maze pixel
-    // TODO: move to storage files
-    Asset maze = {0, 0, MAZE_SZ_CELL * MAZE_SZ_CELL_PIXEL,
-                  MAZE_SZ_CELL * MAZE_SZ_CELL_PIXEL, bitmap_maze};
-
-    uint16_t posX = pos->posX * MAZE_SZ_CELL_PIXEL + (MAZE_SZ_CELL_PIXEL - ITEM_SZ) / 2;
-    uint16_t posY = pos->posY * MAZE_SZ_CELL_PIXEL + (MAZE_SZ_CELL_PIXEL - ITEM_SZ) / 2;
-
-    for (int i = GAME_W / 2 - dialog_width / 2 - RECT_BORDER; i <= GAME_W / 2 + dialog_width / 2 + RECT_BORDER; i++) {
-        for (int j = GAME_H / 2 - DIALOG_HEIGHT / 2; j <= GAME_H / 2 + DIALOG_HEIGHT / 2; j++) {
-            int dx = i - posX, dy = j - posY;
-            if (dx * dx + dy * dy <= currentRadius * currentRadius) {
-                framebf_drawPixel(i, j, maze.bitmap[i + j * maze.width]);
-            } else {
-                framebf_drawPixel(i, j, MENU_BACKGND);
-            }
-        }
-    }
-}
 
 void updateAssetPos(Asset *asset, int x, int y) {
     asset->posX = x;

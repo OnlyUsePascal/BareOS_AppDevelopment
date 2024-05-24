@@ -63,6 +63,7 @@ typedef struct {
   unsigned long *bitmap;
   Item *items[10];
   int itemsSz;
+  Player *player;
 } Maze;
 
 extern const int xOffset[];
@@ -72,7 +73,7 @@ extern uint16_t currentRadius;
 
 void game_enter();
 int game_menu_enter();
-void game_start();
+void game_start(Maze *mz);
 void game_continue();
 void game_help();
 void game_exit();
