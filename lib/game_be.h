@@ -72,6 +72,7 @@ extern const char directionKey[];
 static uint16_t currentRadius = 100;
 
 void game_enter();
+int game_menu_enter();
 void game_start();
 void game_continue();
 void game_help();

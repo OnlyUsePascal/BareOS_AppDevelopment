@@ -29,7 +29,7 @@ enum Cmd {
 #endif
 };
 
-// #define FEAT_IMG
+//  #define FEAT_IMG
 // #define FEAT_VID
 #define DEBUG
 #define FEAT_FONT

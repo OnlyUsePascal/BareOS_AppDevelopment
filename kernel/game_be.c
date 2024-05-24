@@ -2,14 +2,13 @@
 #include "../lib/game_be.h"
 #include "../lib/game_fe.h"
 #include "../lib/framebf.h"
-#include "../lib/font.h"
 #include "../lib/def.h"
 #include "../lib/util_str.h"
+#include "../lib/data/game/game_menu.h"
 #include "../lib/data/game/maze.h"
 #include "../lib/data/game/maze_state.h"
 #include "../lib/data/game/player.h"
 #include "../lib/data/game/item.h"
-#include "../lib/data/game/player_movement.h"
 #include "../lib/data/data_menu_background.h"
 
 // ===== BACK-END =====
@@ -20,7 +19,6 @@ const int xOffset[] = {0, -1, 0, 1};
 void game_enter() {
     // init
     framebf_init(GAME_W, GAME_H, GAME_W, GAME_H);
-
     framebf_drawImg(0, 0, MENU_BACKGROUND_SIZE, MENU_BACKGROUND_SIZE, bitmap_menu_background);
 
     // menu
@@ -30,7 +28,7 @@ void game_enter() {
 
     while (1) {
         drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
-        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz);
+        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz, MENU_FOREGND, MENU_BACKGND);
 
         switch (optIdx) {
             case 0: //start
@@ -54,20 +52,47 @@ void game_enter() {
 }
 
 
+int game_menu_enter() {
+    // init
+    framebf_init(GAME_W, GAME_H, GAME_W, GAME_H);
+    framebf_drawImg(115, 130, GAME_MENU_SZ_W, GAME_MENU_SZ_H, bitmap_game_menu);
+
+    // menu
+    int menuPosX = 220, menuPosY = 220, yOffset = 50;
+    char *opts[] = {"Continue", "Exit to menu"};
+    int optSz = sizeof(opts) / sizeof(opts[0]);
+
+    while (1) {
+        drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
+        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz, MENU_FOREGND, GAME_MENU_BACKGND);
+
+        switch (optIdx) {
+            case 0: //start
+                return 0;
+                break;
+
+            case 1: //exit to menu
+                return 1;
+                break;
+        }
+    }
+}
+
+
 void game_start(){
     uart_puts("Starting Game...\n");
     bool isFOVShown = true;
     Asset playerAsset = {ASSET_HIDDEN, ASSET_HIDDEN, PLAYER_SZ, PLAYER_SZ, bitmap_player};
-    Position playerPos = {0, MAZE_SZ_CELL / 2}; 
-    
+    Position playerPos = {0, MAZE_SZ_CELL / 2};
+
     Asset bombAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_bomb};
     Position bombPos = {1, 9};
     Item bomb = {&bombAsset, &bombPos, BOMB, 0};
     
-    // TODO: more item
     Asset visionAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_vision};
     Position visionPos = {5, 5};
     Item vision = {&visionAsset, &visionPos, VISION, 0};
+    
     Asset portalAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_portal};
     Position portalPos = {7, 5};
     Item portal = {&portalAsset, &portalPos, PORTAL, 0};
@@ -75,10 +100,9 @@ void game_start(){
     Maze maze1 = {1, -1, bitmap_maze, {&bomb, &vision, &portal}, 3};
     getMazePathColor(&maze1);
     
-    
     posBeToFe(&playerPos, &playerAsset);
     
-    // TODO: init loop for every maze item ?
+    // TODO: init loop for every maze item
     posBeToFe(&bombPos, &bombAsset);
     posBeToFe(&visionPos, &visionAsset);
     posBeToFe(&portalPos, &portalAsset);
@@ -88,7 +112,7 @@ void game_start(){
     embedAsset(&maze1, portal.asset, true);
     
     render_scene(&maze1, &playerAsset, isFOVShown);
-    
+        
     // movement 
     while (1) {
         uart_puts("---\n");
@@ -102,10 +126,18 @@ void game_start(){
         else if(c == 'p'){
             adjustBrightness(&maze1, &playerAsset, false);
         } 
-        else if (c == 27) {
-            //TODO: temporary escape to menu
-            clearScreen();
-            break;      
+        else if (c == 27) { // game menu
+            int game_stage = game_menu_enter();   
+            switch (game_stage) {
+            case 0:
+                render_scene(&maze1, &playerAsset, isFOVShown);
+                break;
+            case 1:
+                clearScreen();
+                framebf_drawImg(0, 0, MENU_BACKGROUND_SIZE, MENU_BACKGROUND_SIZE, bitmap_menu_background);
+                return;
+            }
+            // str_debug_num(game_stage);
         } 
         else if (c == 'k') {
             isFOVShown = !isFOVShown;
@@ -135,9 +167,8 @@ void game_start(){
             
             update_pos(&playerPos, dir);
             Item *collidedItem = detect_collision(playerPos, maze1.items, maze1.itemsSz);
-            // TODO: item collision
-            handle_collision(collidedItem);
             drawMovement(&maze1, &playerAsset, dir, collidedItem);
+            handle_collision(collidedItem, &maze1, &playerAsset);
         }
     } 
 }
@@ -171,8 +202,14 @@ void game_exit() {
 
 
 
+
+
+
+
+
+
 // =============================== GAME FLOW
-void render_scene(const Maze *maze, const const Asset *asset, const bool isFOVShown) {
+void render_scene(const Maze *maze, const Asset *asset, const bool isFOVShown) {
     if (!isFOVShown) {
         framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
     } else {
@@ -191,19 +228,43 @@ Item* detect_collision(Position playerPos, Item *items[], int itemsSz) {
             return items[i];
         }
     }
-
-return NULL;  
+    return NULL;  
 }
 
 
-void handle_collision(Item *item) {
+void handle_collision(Item *item, Maze *maze, Asset *playerAsset) {
     if (item == NULL) return;
-    
+
     debug_item(*item);
-    // TODO: remove in backend
     item->collided = 1;
-    
-    // switch
+
+    static unsigned char seeing_item_first_time = 0;
+    static const char *item_names[] = {
+        "TRAP",
+        "BOMB",
+        "VISION",
+        "PORTAL"
+    };
+    static const char *item_descs[] = {
+        "TRAP DESCRIPTION",
+        "BOMB DESCRIPTION",
+        "VISION DESCRIPTION",
+        "PORTAL DESCRIPTION",
+    };
+
+    if (!(seeing_item_first_time & (1 << item->id))) {
+        seeing_item_first_time |= (1 << item->id);
+
+        drawDialog(item_names[item->id], item_descs[item->id]);
+        while (true) {
+            char c = uart_getc();
+            if (c == '\n') {
+                // removeDialog(item->pos);
+                render_scene(maze, playerAsset, true);
+                return;
+            }
+        }
+    }
 }
 
 

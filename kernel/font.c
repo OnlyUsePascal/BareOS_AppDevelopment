@@ -3,14 +3,13 @@
 #include "../lib/framebf.h"
 #include "../lib/data/data_font.h"
 #include "../lib/data/data_font2.h"
-#include "../lib/utils.h"
 
-extern unsigned char (*font_)[8] = font;
-extern unsigned int font_numglyphs = FONT_NUMGLYPHS;
-extern unsigned int font_bpg = FONT_BPG;
-extern unsigned int font_bpl = FONT_BPL;
-extern unsigned int font_width = FONT_WIDTH;
-extern unsigned int font_height = FONT_HEIGHT;
+unsigned char (*font_)[8] = font;
+unsigned int font_numglyphs = FONT_NUMGLYPHS;
+unsigned int font_bpg = FONT_BPG;
+unsigned int font_bpl = FONT_BPL;
+unsigned int font_width = FONT_WIDTH;
+unsigned int font_height = FONT_HEIGHT;
 
 void get_font_type(int type) {
   switch (type) {
@@ -71,6 +70,10 @@ void font_drawString(int x, int y, char *str, unsigned int attr, int zoom, int t
     }
     str++;
   }
+}
+
+uint16_t font_string_width(const uint8_t no_chars, const uint8_t font_width) {
+    return no_chars * (font_width * 2);
 }
 
 
