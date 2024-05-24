@@ -15,6 +15,7 @@
 const char directionKey[] = {'w', 'a', 's', 'd'};
 const int yOffset[] = {-1, 0, 1, 0};
 const int xOffset[] = {0, -1, 0, 1};
+uint16_t currentRadius = 40;
 
 void game_enter() {
     // init
@@ -84,46 +85,54 @@ void game_start(){
     bool isFOVShown = true;
     Asset playerAsset = {ASSET_HIDDEN, ASSET_HIDDEN, PLAYER_SZ, PLAYER_SZ, bitmap_player};
     Position playerPos = {0, MAZE_SZ_CELL / 2};
+    Player player = {&playerAsset, &playerPos};
 
     Asset bombAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_bomb};
     Position bombPos = {1, 9};
     Item bomb = {&bombAsset, &bombPos, BOMB, 0};
-
+    
     Asset visionAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_vision};
-    Position visionPos = {5, 5};
+    Position visionPos = {2, 5};
     Item vision = {&visionAsset, &visionPos, VISION, 0};
-
-    Maze maze1 = {1, -1, bitmap_maze, {&bomb, &vision}, 2};
+    
+    Asset portalAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_portal};
+    Position portalPos = {7, 5};
+    Item portal = {&portalAsset, &portalPos, PORTAL, 0};
+    
+    Maze maze1 = {1, -1, bitmap_maze, {&bomb, &vision, &portal}, 3};
     getMazePathColor(&maze1);
-
-    // TODO: for loop for every maze item ?
-    posBeToFe(&playerPos, &playerAsset);
-
+    
+    posBeToFe(player.pos, player.asset);
+    
+    // TODO: init loop for every maze item
     posBeToFe(&bombPos, &bombAsset);
     posBeToFe(&visionPos, &visionAsset);
+    posBeToFe(&portalPos, &portalAsset);
+    
     embedAsset(&maze1, bomb.asset, true);
     embedAsset(&maze1, vision.asset, true);
-
-    render_scene(&maze1, &playerAsset, isFOVShown);
+    embedAsset(&maze1, portal.asset, true);
     
+    render_scene(&maze1, player.asset, isFOVShown);
+        
     // movement 
     while (1) {
         uart_puts("---\n");
         char c = uart_getc();
-        debug_pos(playerPos);
+        debug_pos(*player.pos);
         
         // DEBUG / screen shading
         if(c == 'o'){
-            adjustBrightness(&maze1, &playerAsset, true);
+            adjustBrightness(&maze1, player.asset, true);
         }
         else if(c == 'p'){
-            adjustBrightness(&maze1, &playerAsset, false);
+            adjustBrightness(&maze1, player.asset, false);
         } 
         else if (c == 27) { // game menu
             int game_stage = game_menu_enter();   
             switch (game_stage) {
             case 0:
-                render_scene(&maze1, &playerAsset, isFOVShown);
+                render_scene(&maze1, player.asset, isFOVShown);
                 break;
             case 1:
                 clearScreen();
@@ -134,7 +143,7 @@ void game_start(){
         } 
         else if (c == 'k') {
             isFOVShown = !isFOVShown;
-            render_scene(&maze1, &playerAsset, isFOVShown);
+            render_scene(&maze1, player.asset, isFOVShown);
         }
         else {
             //TODO: movement
@@ -146,7 +155,7 @@ void game_start(){
             }
         
             if (dir == -1) continue; 
-            Position posTmp = {playerPos.posX, playerPos.posY};
+            Position posTmp = {player.pos->posX, player.pos->posY};
             update_pos(&posTmp, dir);
             uart_puts("> "); debug_pos(posTmp);
             
@@ -158,10 +167,10 @@ void game_start(){
                 str_debug("hit wall!"); continue;
             } 
             
-            update_pos(&playerPos, dir);
-            Item *collidedItem = detect_collision(playerPos, maze1.items, maze1.itemsSz);
-            drawMovement(&maze1, &playerAsset, dir, collidedItem);
-            handle_collision(collidedItem, &maze1, &playerAsset);
+            update_pos(player.pos, dir);
+            Item *collidedItem = detect_collision(*player.pos, maze1.items, maze1.itemsSz);
+            drawMovement(&maze1, player.asset, dir, collidedItem);
+            handle_collision(collidedItem, &maze1, &player);
         }
     } 
 }
@@ -184,7 +193,28 @@ void game_exit() {
 }
 
 
-// ===============================
+// ============================== GAME ITEM
+void effect_vision(Maze *maze, Player *player){
+    str_debug("item vision");
+    currentRadius = currentRadius + 20;
+    adjustBrightness(maze, player->asset, false);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// =============================== GAME FLOW
 void render_scene(const Maze *maze, const Asset *asset, const bool isFOVShown) {
     if (!isFOVShown) {
         framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
@@ -208,25 +238,26 @@ Item* detect_collision(Position playerPos, Item *items[], int itemsSz) {
 }
 
 
-void handle_collision(Item *item, Maze *maze, Asset *playerAsset) {
+void handle_collision(Item *item, Maze *maze, Player *player) {
     if (item == NULL) return;
 
+    debug_item(*item);
+    item->collided = 1;
+
+    // INSTRUCTION
     static unsigned char seeing_item_first_time = 0;
     static const char *item_names[] = {
         "TRAP",
         "BOMB",
         "VISION",
-        "COIN"
+        "PORTAL"
     };
     static const char *item_descs[] = {
         "TRAP DESCRIPTION",
         "BOMB DESCRIPTION",
         "VISION DESCRIPTION",
-        "COIN DESCRIPTION",
+        "PORTAL DESCRIPTION",
     };
-    
-    debug_item(*item);
-    item->collided = 1;
 
     if (!(seeing_item_first_time & (1 << item->id))) {
         seeing_item_first_time |= (1 << item->id);
@@ -236,12 +267,18 @@ void handle_collision(Item *item, Maze *maze, Asset *playerAsset) {
             char c = uart_getc();
             if (c == '\n') {
                 // removeDialog(item->pos);
-                render_scene(maze, playerAsset, true);
-                return;
+                render_scene(maze, player->asset, true);
+                break;
             }
         }
     }
-
+    
+    // TODO: EFFECT
+    switch (item->id) {
+        case VISION:
+            effect_vision(maze, player);
+            break;
+    }
 }
 
 
@@ -278,6 +315,9 @@ void debug_item(Item item) {
             break;
         case VISION:
             uart_puts("Vision");
+            break;
+        case PORTAL:
+            uart_puts("Portal");
             break;
         default:
             break;

@@ -17,7 +17,6 @@ float cur_darken = 1.0f;
 const float darken_factor = 0.8f; 
 float cur_lighten = 1.0f; 
 const float lighten_factor = 1.25f;
-
 static uint16_t dialog_width = 0;
 
 void clearScreen(){
@@ -94,9 +93,11 @@ void embedAsset(const Maze *maze, const Asset *asset, bool fill){
 
 
 void drawFOV(const Maze *maze, const Asset *asset) {
-    for (int y = asset->posY - currentRadius; y <= asset->posY + currentRadius; ++y) {
-        for (int x = asset->posX - currentRadius; x <= asset->posX + currentRadius; ++x) {
-            int dx = x - asset->posX, dy = y - asset->posY;
+    for (int y = asset->posY - currentRadius+asset->height/2; 
+            y <= asset->posY + currentRadius+asset->height/2; ++y) {
+        for (int x = asset->posX - currentRadius+asset->height/2; 
+                x <= asset->posX + currentRadius+asset->height/2; ++x) {
+            int dx = x - asset->posX - asset->height/2, dy = y - asset->posY- asset->height/2;
             if (dx * dx + dy * dy <= currentRadius * currentRadius) {
                 if (x >= 0 && y >= 0 && x < MAZE_SZ && y < MAZE_SZ) {
                     framebf_drawPixel(x, y, darkenPixel(maze->bitmap[y * MAZE_SZ + x], cur_darken));
@@ -108,13 +109,13 @@ void drawFOV(const Maze *maze, const Asset *asset) {
 
 
 void removeFOV(const Asset *asset) {
-    for (int y = asset->posY - currentRadius; y <= asset->posY + currentRadius; ++y) {
-        for (int x = asset->posX - currentRadius; x <= asset->posX + currentRadius; ++x) {
-            int dx = x - asset->posX, dy = y - asset->posY;
-            if (dx * dx + dy * dy <= currentRadius * currentRadius) {
-                if (x >= 0 && y >= 0 && x < MAZE_SZ && y < MAZE_SZ) {
-                    framebf_drawPixel(x, y, MENU_BACKGND);
-                }
+    for (int y = asset->posY - currentRadius+asset->height/2; 
+            y <= asset->posY + currentRadius+asset->height/2; ++y) {
+        for (int x = asset->posX - currentRadius+asset->height/2; 
+                x <= asset->posX + currentRadius+asset->height/2; ++x) {
+            int dx = x - asset->posX- asset->height/2, dy = y - asset->posY- asset->height/2;
+            if (x >= 0 && y >= 0 && x < MAZE_SZ && y < MAZE_SZ) {
+                framebf_drawPixel(x,y, MENU_BACKGND);
             }
         }
     }
@@ -241,7 +242,7 @@ void drawDialog(const char *title, const char *text) {
 
     dialog_width = max_l(text_width, esc_msg_width);
 
-    str_debug_num(text_width);
+    // str_debug_num(text_width);
 
     framebf_drawRect(
         GAME_W / 2 - dialog_width / 2 - RECT_BORDER,

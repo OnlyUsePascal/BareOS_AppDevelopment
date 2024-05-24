@@ -24,7 +24,7 @@ typedef enum {
   TRAP,
   BOMB,
   VISION,
-  COIN
+  PORTAL,
 } ItemId;
 
 
@@ -44,9 +44,8 @@ typedef struct {
 
 
 typedef struct {
-  Position pos;
-  Light light;
-  int speed; // ???
+  Asset *asset;
+  Position *pos;
 } Player;
 
 
@@ -69,7 +68,7 @@ typedef struct {
 extern const int xOffset[];
 extern const int yOffset[];
 extern const char directionKey[];
-static uint16_t currentRadius = 100;
+extern uint16_t currentRadius;
 
 void game_enter();
 int game_menu_enter();
