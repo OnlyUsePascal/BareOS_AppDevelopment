@@ -10,7 +10,6 @@
 #include "../lib/data/game/maze_state.h"
 #include "../lib/data/game/player.h"
 #include "../lib/data/game/item.h"
-#include "../lib/data/game/player_movement.h"
 #include "../lib/data/data_menu_background.h"
 
 // ===== BACK-END =====
