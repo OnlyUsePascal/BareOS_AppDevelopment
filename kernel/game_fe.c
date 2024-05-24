@@ -121,15 +121,12 @@ void drawMovement(Maze *maze, Asset *playerAsset, Direction dir, Item *collidedI
                             playerAsset->posY + yOffset[dir] * stepOffset);
         drawFOV(maze, playerAsset);
         drawMoveAnimation(playerAsset, dir, i);
-        wait_msec(250000);
+        wait_msec(125000);
     }
     
     // walk the last step
     removeFOV(playerAsset);
-    if (collidedItem != NULL) {
-        //replace embeded item with background
-        embedAsset(maze, collidedItem->asset, false); 
-    }
+    if (collidedItem != NULL) embedAsset(maze, collidedItem->asset, false);
     updateAssetPos(playerAsset, posXFinal, posYFinal);
     drawFOV(maze, playerAsset);
     drawMoveAnimation(playerAsset, dir, STEP_AMOUNT - 1);

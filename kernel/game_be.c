@@ -3,13 +3,15 @@
 #include "../lib/game_fe.h"
 #include "../lib/framebf.h"
 #include "../lib/def.h"
-#include "../lib/util_str.h"
+#include "../lib/utils.h"
+// #include "../lib/util_str.h"
 #include "../lib/data/game/game_menu.h"
 #include "../lib/data/game/maze.h"
 #include "../lib/data/game/maze_state.h"
 #include "../lib/data/game/player.h"
 #include "../lib/data/game/item.h"
 #include "../lib/data/data_menu_background.h"
+
 
 // ===== BACK-END =====
 const char directionKey[] = {'w', 'a', 's', 'd'};
@@ -30,16 +32,24 @@ void game_enter() {
     Asset playerAsset = {ASSET_HIDDEN, ASSET_HIDDEN, PLAYER_SZ, PLAYER_SZ, bitmap_player};
     Position playerPos = {0, MAZE_SZ_CELL / 2};
     Player player = {&playerAsset, &playerPos};
+    
     Asset bombAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_bomb};
     Position bombPos = {1, 9};
-    Item bomb = {&bombAsset, &bombPos, BOMB, 0};
+    Item bombMeta = {&bombAsset, &bombPos, BOMB, 0};
+    
     Asset visionAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_vision};
-    Position visionPos = {2, 5};
-    Item vision = {&visionAsset, &visionPos, VISION, 0};
+    Position visionPos = {7, 5};
+    Item visionMeta = {&visionAsset, &visionPos, VISION, 0};
+    
     Asset portalAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_portal};
-    Position portalPos = {7, 5};
-    Item portal = {&portalAsset, &portalPos, PORTAL, 0};
-    Maze mz1 = {1, -1, bitmap_maze, {&bomb, &vision, &portal}, 3, &player};
+    Position portalPos = {2, 5}, portalDes = {4,5};
+    Item portalMeta = {&portalAsset, &portalPos, PORTAL, 0};
+    Portal portal = {&portalMeta, &portalDes};
+    
+    Maze mz1 = {.level = 1, .pathColor = -1, .bitmap = bitmap_maze, 
+                .itemMetas = {&bombMeta, &visionMeta, &portalMeta}, .itemMetasSz = 3, 
+                .portal = &portal,
+                .player = &player};
     
     // maze2
     Maze mz2 = {};
@@ -63,7 +73,8 @@ void game_enter() {
 
     while (1) {
         drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
-        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz, MENU_FOREGND, MENU_BACKGND);
+        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, 
+                                optSz, MENU_FOREGND, MENU_BACKGND);
 
         switch (optIdx) {
             case 0: //start
@@ -90,7 +101,8 @@ void game_enter() {
 int game_menu_enter() {
     // init
     framebf_init(GAME_W, GAME_H, GAME_W, GAME_H);
-    framebf_drawImg(115, 130, GAME_MENU_SZ_W, GAME_MENU_SZ_H, bitmap_game_menu);
+    framebf_drawImg(115, 130, GAME_MENU_SZ_W, 
+                    GAME_MENU_SZ_H, bitmap_game_menu);
 
     // menu
     int menuPosX = 220, menuPosY = 220, yOffset = 50;
@@ -99,7 +111,8 @@ int game_menu_enter() {
 
     while (1) {
         drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
-        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz, MENU_FOREGND, GAME_MENU_BACKGND);
+        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, 
+                                optSz, MENU_FOREGND, GAME_MENU_BACKGND);
 
         switch (optIdx) {
             case 0: //start
@@ -123,8 +136,8 @@ void game_start(Maze *mz){
     getMazePathColor(mz);
     
     posBeToFe(player->pos, player->asset);
-    for (int i = 0 ; i < mz->itemsSz; i++){
-        Item *item = mz->items[i];        
+    for (int i = 0 ; i < mz->itemMetasSz; i++){
+        Item *item = mz->itemMetas[i];        
         posBeToFe(item->pos, item->asset);
         if(!(item->collided)) embedAsset(mz, item->asset, true);
     }
@@ -152,7 +165,8 @@ void game_start(Maze *mz){
                 break;
             case 1:
                 clearScreen();
-                framebf_drawImg(0, 0, MENU_BACKGROUND_SIZE, MENU_BACKGROUND_SIZE, bitmap_menu_background);
+                framebf_drawImg(0, 0, MENU_BACKGROUND_SIZE, 
+                                MENU_BACKGROUND_SIZE, bitmap_menu_background);
                 return;
             }
             // str_debug_num(game_stage);
@@ -184,7 +198,7 @@ void game_start(Maze *mz){
             } 
             
             update_pos(player->pos, dir);
-            Item *collidedItem = detect_collision(*(player->pos), mz->items, mz->itemsSz);
+            Item *collidedItem = detect_collision(*(player->pos), mz->itemMetas, mz->itemMetasSz);
             drawMovement(mz, player->asset, dir, collidedItem);
             handle_collision(collidedItem, mz, player);
         }
@@ -211,13 +225,23 @@ void game_exit() {
 
 // ============================== GAME ITEM
 void effect_vision(Maze *maze, Player *player){
-    str_debug("item vision");
     currentRadius = currentRadius + 20;
     adjustBrightness(maze, player->asset, false);
 }
 
 
+void effect_portal(Maze *mz, Player *pl){
+    wait_msec(125000);   
+    Position *des = mz->portal->des;
 
+    // erase fov -> change position in FE, BE -> draw again 
+    removeFOV(pl->asset);
+    pl->pos->posX = des->posX;
+    pl->pos->posY = des->posY;
+    posBeToFe(pl->pos, pl->asset);
+    drawFOV(mz, pl->asset);
+    drawAsset(pl->asset);
+}
 
 
 
@@ -243,11 +267,11 @@ void render_scene(const Maze *maze, const Asset *asset, const bool isFOVShown) {
 }
 
 
-Item* detect_collision(Position playerPos, Item *items[], int itemsSz) {
-    for (int i = 0 ; i < itemsSz; i++){
-        if (cmp_pos(playerPos, *(items[i]->pos)) 
-                && items[i]->collided == 0) {
-            return items[i];
+Item* detect_collision(Position playerPos, Item *itemMetas[], int itemMetasSz) {
+    for (int i = 0 ; i < itemMetasSz; i++){
+        if (cmp_pos(playerPos, *(itemMetas[i]->pos)) 
+                && itemMetas[i]->collided == 0) {
+            return itemMetas[i];
         }
     }
     return NULL;  
@@ -293,6 +317,9 @@ void handle_collision(Item *item, Maze *maze, Player *player) {
     switch (item->id) {
         case VISION:
             effect_vision(maze, player);
+            break;
+        case PORTAL:
+            effect_portal(maze, player);
             break;
     }
 }
