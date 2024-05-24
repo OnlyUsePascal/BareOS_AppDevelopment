@@ -29,6 +29,11 @@ void drawMenu(int posX, int posY, int spacing, char *opts[], int optSz){
     }
 }
 
+void removeMenu(int posX, int posY, int spacing, char *opts[], int optSz) {
+    for (int i = 0; i < optSz; i++){
+        font_drawString(posX, posY + i * spacing, opts[i], MENU_BACKGND, 2, 1);
+    }
+}
 
 int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz, const unsigned int foregnd, const unsigned int backgnd) {
     int actionIdx = 0;

@@ -3,6 +3,7 @@
 #include "../lib/game_fe.h"
 #include "../lib/framebf.h"
 #include "../lib/def.h"
+#include "../lib/font.h"
 #include "../lib/util_str.h"
 #include "../lib/data/game/game_menu.h"
 #include "../lib/data/game/maze.h"
@@ -39,18 +40,17 @@ void game_enter() {
     Asset portalAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_portal};
     Position portalPos = {7, 5};
     Item portal = {&portalAsset, &portalPos, PORTAL, 0};
-    Maze mz1 = {1, -1, bitmap_maze, {&bomb, &vision, &portal}, 3, &player};
-    
+    uart_puts("here\n");
+    Maze mz1 = {1, -1, bitmap_maze, (Item*[]){&bomb, &vision, &portal}, 3, &player};
+
     // maze2
     Maze mz2 = {};
     Maze mz3 = {};
-    
+
     Maze *mazes[] = {&mz1, &mz2, &mz3};
-    
-    
-    
-    
-    
+
+
+
     
     
     
@@ -60,10 +60,11 @@ void game_enter() {
     int menuPosX = 220, menuPosY = 250, yOffset = 50;
     char *opts[] = {"Start", "Continue", "How To Play?", "Exit"};
     int optSz = sizeof(opts) / sizeof(opts[0]);
+    drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
 
     while (1) {
-        drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
         int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz, MENU_FOREGND, MENU_BACKGND);
+        font_drawChar(menuPosX - 50, menuPosY + optIdx * yOffset, '>', MENU_BACKGND, 2, 1);
 
         switch (optIdx) {
             case 0: //start
@@ -71,7 +72,9 @@ void game_enter() {
                 break;
 
             case 1: //continue
+                removeMenu(menuPosX, menuPosY, yOffset, opts, optSz);
                 game_continue();
+                drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
                 break;
 
             case 2: //help
@@ -193,7 +196,33 @@ void game_start(Maze *mz){
 
 
 void game_continue() {
-    uart_puts("Continueing Game...\n");
+    int menuPosX = 220, menuPosY = 250, yOffset = 50;
+    char *opts[] = {"Level 1", "Level 2", "Level 3", "Back to Menu"};
+    int optSz = sizeof(opts) / sizeof(opts[0]);
+    drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
+
+    while (1) {
+        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz, MENU_FOREGND, MENU_BACKGND);
+        font_drawChar(menuPosX - 50, menuPosY + optIdx * yOffset, '>', MENU_BACKGND, 2, 1);
+
+        switch (optIdx) {
+            case 0:
+                uart_puts("level 1\n");
+                break;
+
+            case 1:
+                uart_puts("level 2\n");
+                break;
+
+            case 2:
+                uart_puts("level 3\n");
+                break;
+
+            case 3: // back to menu
+                removeMenu(menuPosX, menuPosY, yOffset, opts, optSz);
+                return;
+        }
+    }
 }
 
 

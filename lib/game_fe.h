@@ -22,7 +22,9 @@
 
 
 void clearScreen();
-void drawMenu(int posX, int posY, int yOffset, char *opts[], int optSz);
+
+void drawMenu(int posX, int posY, int spacing, char *opts[], int optSz);
+void removeMenu(int posX, int posY, int spacing, char *opts[], int optSz);
 int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz, const unsigned int foregnd, const unsigned int backgnd);
 
 void drawFOVMovement(Position initialPlayerPosition, Direction dir);

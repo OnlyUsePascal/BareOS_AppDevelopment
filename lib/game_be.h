@@ -61,7 +61,7 @@ typedef struct {
   int level;
   unsigned long pathColor;
   unsigned long *bitmap;
-  Item *items[10];
+  Item **items;
   int itemsSz;
   Player *player;
 } Maze;
