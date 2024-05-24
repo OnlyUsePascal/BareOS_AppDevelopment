@@ -5,6 +5,7 @@
 #include "../lib/font.h"
 #include "../lib/def.h"
 #include "../lib/util_str.h"
+#include "../lib/data/game/game_menu.h"
 #include "../lib/data/game/maze.h"
 #include "../lib/data/game/maze_state.h"
 #include "../lib/data/game/player.h"
@@ -30,7 +31,7 @@ void game_enter() {
 
     while (1) {
         drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
-        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz);
+        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz, MENU_FOREGND, MENU_BACKGND);
 
         switch (optIdx) {
             case 0: //start
@@ -48,6 +49,36 @@ void game_enter() {
             case 3: //exit
                 game_exit();
                 return;
+        }
+
+    }
+}
+
+
+int game_menu_enter() {
+    // init
+    framebf_init(GAME_W, GAME_H, GAME_W, GAME_H);
+    
+    framebf_drawImg(115, 130, GAME_MENU_SZ_W, GAME_MENU_SZ_H, bitmap_game_menu);
+
+    // menu
+    int menuPosX = 220, menuPosY = 220, yOffset = 50;
+    char *opts[] = {"Continue", "Exit to menu"};
+    int optSz = sizeof(opts) / sizeof(opts[0]);
+
+    while (1) {
+        
+        drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
+        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz, MENU_FOREGND, GAME_MENU_BACKGND);
+
+        switch (optIdx) {
+            case 0: //start
+                return 0;
+                break;
+
+            case 1: //exit to menu
+                return 1;
+                break;
         }
 
     }
@@ -95,10 +126,20 @@ void game_start(){
         else if(c == 'p'){
             adjustBrightness(&maze1, &playerAsset, false);
         } 
-        else if (c == 27) {
-            //TODO: temporary escape to menu
-            clearScreen();
-            break;      
+        else if (c == 27) { // game menu
+            int game_stage = game_menu_enter();   
+            switch (game_stage)
+            {
+            case 0:
+              render_scene(&maze1, &playerAsset, isFOVShown);
+              break;
+  
+            case 1:
+              game_enter();
+              return;
+              break;
+            }
+            // str_debug_num(game_stage);
         } 
         else if (c == 'k') {
             isFOVShown = !isFOVShown;

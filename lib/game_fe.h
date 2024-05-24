@@ -10,7 +10,10 @@
 #define GAME_H 600
 #define MENU_BACKGND 0xFF000B18
 #define MENU_FOREGND 0x00FFFFFF
+#define GAME_MENU_BACKGND 0x00b99ca1
 #define MAZE_SZ 440
+#define GAME_MENU_SZ_W 350
+#define GAME_MENU_SZ_H 271
 #define ASSET_HIDDEN -1
 
 #define MAZE_SZ_CELL_PIXEL 40 
@@ -20,7 +23,7 @@
 
 void clearScreen();
 void drawMenu(int posX, int posY, int yOffset, char *opts[], int optSz);
-int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz);
+int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz, const unsigned int foregnd, const unsigned int backgnd);
 
 void drawFOVMovement(Position initialPlayerPosition, Direction dir);
 void removeFOV(const Asset *asset);
