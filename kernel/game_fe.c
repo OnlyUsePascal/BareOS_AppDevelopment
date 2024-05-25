@@ -107,7 +107,7 @@ void removeFOV(const Asset *asset) {
 }
 
 
-void drawMovement(Maze *maze, Asset *playerAsset, Direction dir, Item *collidedItem){
+void drawMovement(Maze *maze, Asset *playerAsset, Direction dir, ItemMeta *collidedItem){
     // TODO: animation with frame
     int stepOffset = MAZE_SZ_CELL_PIXEL / STEP_AMOUNT;
     int posXFinal = playerAsset->posX + xOffset[dir] * MAZE_SZ_CELL_PIXEL;

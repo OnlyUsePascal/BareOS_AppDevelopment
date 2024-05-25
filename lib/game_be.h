@@ -33,15 +33,20 @@ typedef struct {
   Position *pos;
   ItemId id;
   int collided;
-} Item;
+} ItemMeta;
 
 
 typedef struct {
-  // inherit Item
-  Item *item;
+  // inherit ItemMeta
+  ItemMeta *itemMeta;
   Position *des;
 } Portal;
 
+typedef struct {
+  ItemMeta *itemMeta;
+  Position *wall;
+  bool used;
+} Bomb;
 
 typedef struct {
   Asset *asset;
@@ -61,10 +66,12 @@ typedef struct {
   int level;
   unsigned long pathColor;
   unsigned long *bitmap;
-  Item *itemMetas[10];
+  int *bitmapState;
+  ItemMeta *itemMetas[10];
   int itemMetasSz;
   Player *player;
   Portal *portal;
+  Bomb *bomb;
 } Maze;
 
 extern const int xOffset[];
@@ -84,7 +91,7 @@ void clearScreen();
 void cli_toggle_fov();
 #endif
 
-Item* detect_collision(Position playerPos, Item *itemMetas[], int itemMetasSz);
+ItemMeta* detect_collision(Position playerPos, ItemMeta *itemMetas[], int itemMetasSz);
 
 
 
