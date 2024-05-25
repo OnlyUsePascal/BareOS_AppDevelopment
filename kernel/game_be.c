@@ -11,6 +11,7 @@
 #include "../lib/data/game/player.h"
 #include "../lib/data/game/item.h"
 #include "../lib/data/data_menu_background.h"
+#include "../lib/data/help_dialog.h"
 
 // ===== BACK-END =====
 const char directionKey[] = {'w', 'a', 's', 'd'};
@@ -18,7 +19,12 @@ const int yOffset[] = {-1, 0, 1, 0};
 const int xOffset[] = {0, -1, 0, 1};
 uint16_t currentRadius = 40;
 
-
+void render_scene(const Maze *maze, const Asset *asset, const bool isFOVShown);
+void debug_pos(Position pos);
+void update_pos(Position *des, Direction dir);
+void handle_collision(Item *item, Maze *maze, Player *player);
+int cmp_pos(Position pos1, Position pos2);
+void debug_item(Item item);
 
 void game_enter() {
     // init
@@ -58,7 +64,7 @@ void game_enter() {
     
     // menu
     int menuPosX = 220, menuPosY = 250, yOffset = 50;
-    char *opts[] = {"Start", "Continue", "How To Play?", "Exit"};
+    char *opts[] = {"Start", "Choose Level", "How To Play?", "Exit"};
     int optSz = sizeof(opts) / sizeof(opts[0]);
     drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
 
@@ -78,7 +84,9 @@ void game_enter() {
                 break;
 
             case 2: //help
+                removeMenu(menuPosX, menuPosY, yOffset, opts, optSz);
                 game_help();
+                drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
                 break;
 
             case 3: //exit
@@ -228,6 +236,25 @@ void game_continue() {
 
 void game_help() {
     uart_puts("Game Instruction...\n");
+
+    Asset dialog = {
+        GAME_W / 2 - HELP_DIALOG_WIDTH / 2,
+        GAME_H / 2 - HELP_DIALOG_HEIGHT / 2,
+        HELP_DIALOG_WIDTH,
+        HELP_DIALOG_HEIGHT,
+        bitmap_help_dialog
+    };
+
+    drawAsset(&dialog);
+
+    char c = 0;
+    while ((c = uart_getc()) != '\n') {}
+
+    for (int i = GAME_W / 2 - HELP_DIALOG_WIDTH / 2, posX = 0; posX < HELP_DIALOG_WIDTH; i++, posX++) {
+        for (int j = GAME_H / 2 - HELP_DIALOG_HEIGHT / 2, posY = 0; posY < HELP_DIALOG_HEIGHT; j++, posY++) {
+            framebf_drawPixel(i, j, bitmap_menu_background[i + j * MENU_BACKGROUND_SIZE]);
+        }
+    }
 }
 
 

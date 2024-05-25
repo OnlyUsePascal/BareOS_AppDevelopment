@@ -6,6 +6,7 @@
 #include "../lib/data/game/maze.h"
 #include "../lib/data/data_font.h"
 #include "../lib/data/game/player_movement.h"
+#include "../lib/font.h"
 
 #define STEP_AMOUNT 3
 #define RECT_BORDER 10
@@ -37,21 +38,21 @@ void removeMenu(int posX, int posY, int spacing, char *opts[], int optSz) {
 
 int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz, const unsigned int foregnd, const unsigned int backgnd) {
     int actionIdx = 0;
-    font_drawChar(markPosX, markPosY, '>', foregnd, 2);
+    font_drawChar(markPosX, markPosY, '>', foregnd, 2, 1);
 
     while (1) {
         char c = uart_getc();
         uart_sendc(c);
         uart_sendc('\n');
         if (c == 'w' || c == 'a') {
-            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', backgnd, 2);
+            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', backgnd, 2, 1);
             actionIdx = (actionIdx - 1) % optSz;
             if (actionIdx < 0) actionIdx += optSz;
-            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', foregnd, 2);
+            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', foregnd, 2, 1);
         } else if (c == 's' || c == 'd') {
-            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', backgnd, 2);
+            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', backgnd, 2, 1);
             actionIdx = (actionIdx + 1) % optSz;
-            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', foregnd, 2);
+            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', foregnd, 2, 1);
         } else if (c == '\n') {
             break;
         }
