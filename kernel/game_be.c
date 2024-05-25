@@ -176,26 +176,30 @@ void game_start(Maze *mz){
             effect_bomb(mz, pl);
         } 
         else {
+            // spinning
             Direction dir = -1;
             for (int i = 0; i < 4; i++){
                 if (directionKey[i] == c){
                     dir = i; break;
                 }
             }
-        
             if (dir == -1) continue; 
-            // TODO: spinning
-            Position posTmp = {pl->pos->posX, pl->pos->posY};
-            update_pos(&posTmp, dir);
-            uart_puts("> "); debug_pos(posTmp);
+            drawFOV(mz, pl->asset);
+            drawMoveAnimation(pl->asset, dir, 2);
             
-            if (posTmp.posX < 0 || posTmp.posY < 0) continue;
+            // moving
+            Position posTmp = {pl->pos->posX, pl->pos->posY};
+            update_pos(&posTmp, dir); uart_puts("-> "); debug_pos(posTmp);
+            if (posTmp.posX < 0 || posTmp.posY < 0 || 
+                posTmp.posX >= MAZE_SZ_CELL || posTmp.posY >= MAZE_SZ_CELL) continue;
+                
             int mazeState = mz->bitmapState[MAZE_SZ_CELL * posTmp.posY + posTmp.posX];
             str_debug_num(mazeState);
             if (mazeState == 0) {
                 str_debug("hit wall!"); continue;
             } 
             
+            // post-moving
             update_pos(pl->pos, dir);
             ItemMeta *collidedItem = detect_collision(*(pl->pos), mz->itemMetas, mz->itemMetasSz);
             drawMovement(mz, pl->asset, dir, collidedItem);
