@@ -64,9 +64,6 @@ void game_enter() {
     
     
     
-    
-    
-    
     // menu
     int menuPosX = 220, menuPosY = 250, yOffset = 50;
     char *opts[] = {"Start", "Continue", "How To Play?", "Exit"};
@@ -142,7 +139,8 @@ void game_start(Maze *mz){
     }
     
     render_scene(mz, pl->asset, isFOVShown);
-        
+    // TODO: paint breakable wall
+    
     // movement 
     while (1) {
         uart_puts("---\n");
@@ -178,7 +176,6 @@ void game_start(Maze *mz){
             effect_bomb(mz, pl);
         } 
         else {
-            //TODO: movement
             Direction dir = -1;
             for (int i = 0; i < 4; i++){
                 if (directionKey[i] == c){
@@ -255,33 +252,48 @@ void effect_bomb(Maze *mz, Player *pl){
     // brighten the wall, 
     
     if (bo->used) return;
-    for (int x = wall->posX * MAZE_SZ_CELL_PIXEL; 
-                x < (wall->posX + 1) * MAZE_SZ_CELL_PIXEL; x++){
-        for (int y = wall->posY * MAZE_SZ_CELL_PIXEL; 
-                y < (wall->posY + 1) * MAZE_SZ_CELL_PIXEL; y++){
-            mz->bitmap[y * MAZE_SZ + x] = 
-                darkenPixel(mz->bitmap[y * MAZE_SZ + x], curDarken / darkenFactor);
+    
+    // modified FOV
+    int lowerX = wall->posX * MAZE_SZ_CELL_PIXEL, 
+        upperX = (wall->posX + 1) * MAZE_SZ_CELL_PIXEL,
+        lowerY = wall->posY * MAZE_SZ_CELL_PIXEL,
+        upperY = (wall->posY + 1) * MAZE_SZ_CELL_PIXEL;
+    int lx = pl->asset->posX - currentRadius + pl->asset->height/2,
+        ux = pl->asset->posX + currentRadius + pl->asset->height/2,
+        ly = pl->asset->posY - currentRadius + pl->asset->height/2,
+        uy = pl->asset->posY + currentRadius + pl->asset->height/2;
+    
+    // uart_puts("["); uart_dec(lowerX); uart_puts(","); uart_dec(upperX); uart_puts(","); uart_dec(lowerY); uart_puts(","); uart_dec(upperY); uart_puts(","); uart_puts("]\n");
+    // uart_puts("["); uart_dec(lx); uart_puts(","); uart_dec(ux); uart_puts(","); uart_dec(ly); uart_puts(","); uart_dec(uy); uart_puts(","); uart_puts("]\n");
+    
+    for (int x = lx; x < ux; x++) {
+        for (int y = ly; y < uy; y++) {
+            if (x >= 0 && y >= 0 && x < MAZE_SZ && y < MAZE_SZ) {
+                int dx = x - pl->asset->posX - pl->asset->height/2, 
+                    dy = y - pl->asset->posY - pl->asset->height/2;
+                if (dx * dx + dy * dy <= currentRadius * currentRadius) {
+                    float darkenLevel = (x >= lowerX && x < upperX 
+                                        && y >= lowerY && y < upperY) 
+                                        ? (curDarken / darkenFactor) : curDarken;
+                    framebf_drawPixel(x, y, darkenPixel(mz->bitmap[y * MAZE_SZ + x], darkenLevel));
+                }
+            }
         }
     }
-    drawFOV(mz, pl->asset);
     drawAsset(pl->asset);
     
-    // then draw the original (or blow it up if not used)
+    // then draw the original wall (or blow it up if not used)
     wait_msec(250000);
-    for (int x = wall->posX * MAZE_SZ_CELL_PIXEL; 
-                x < (wall->posX + 1) * MAZE_SZ_CELL_PIXEL; x++){
-        for (int y = wall->posY * MAZE_SZ_CELL_PIXEL; 
-                    y < (wall->posY + 1) * MAZE_SZ_CELL_PIXEL; y++){
-            mz->bitmap[y * MAZE_SZ + x] = (usable) ?
-                mz->pathColor : 
-                darkenPixel(mz->bitmap[y * MAZE_SZ + x], curDarken * darkenFactor);
-            
+    if (usable) {
+        for (int x = lowerX; x < upperX; x++){
+            for (int y = lowerY; y < upperY; y++){
+                mz->bitmap[y * MAZE_SZ + x] = mz->pathColor;
+            }
         }
     }
     drawFOV(mz, pl->asset);
     drawAsset(pl->asset);
     
-    // TODO: paint breakable wall
     // TODO: check if pl stand near
     // update BE
     if (usable){

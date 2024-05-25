@@ -83,10 +83,9 @@ void drawFOV(const Maze *maze, const Asset *asset) {
         for (int x = asset->posX - currentRadius+asset->height/2; 
                 x <= asset->posX + currentRadius+asset->height/2; ++x) {
             int dx = x - asset->posX - asset->height/2, dy = y - asset->posY- asset->height/2;
-            if (dx * dx + dy * dy <= currentRadius * currentRadius) {
-                if (x >= 0 && y >= 0 && x < MAZE_SZ && y < MAZE_SZ) {
-                    framebf_drawPixel(x, y, darkenPixel(maze->bitmap[y * MAZE_SZ + x], curDarken));
-                }
+            if (dx * dx + dy * dy <= currentRadius * currentRadius 
+                    && x >= 0 && y >= 0 && x < MAZE_SZ && y < MAZE_SZ) {
+                framebf_drawPixel(x, y, darkenPixel(maze->bitmap[y * MAZE_SZ + x], curDarken));
             }
         }
     }
