@@ -92,6 +92,32 @@ void drawFOV(const Maze *maze, const Asset *asset) {
 }
 
 
+void drawFOVWeakWall(const Maze *mz, const Asset *asset, const Asset *weakWall){
+    int wallLowerX = weakWall->posX * MAZE_SZ_CELL_PIXEL, 
+        wallUpperX = (weakWall->posX + 1) * MAZE_SZ_CELL_PIXEL,
+        wallLowerY = weakWall->posY * MAZE_SZ_CELL_PIXEL,
+        wallUpperY = (weakWall->posY + 1) * MAZE_SZ_CELL_PIXEL,
+        fovLowerX = asset->posX - currentRadius + asset->height/2,
+        fovUpperX = asset->posX + currentRadius + asset->height/2,
+        fovLowerY = asset->posY - currentRadius + asset->height/2,
+        fovUpperY = asset->posY + currentRadius + asset->height/2;
+    
+    for (int x = fovLowerX; x < fovUpperX; x++) {
+        for (int y = fovLowerY; y < fovUpperY; y++) {
+            if (!(x >= 0 && y >= 0 && x < MAZE_SZ && y < MAZE_SZ)) continue;
+            
+            int dx = x - asset->posX - asset->height/2, 
+                dy = y - asset->posY - asset->height/2;
+            if (!(dx * dx + dy * dy <= currentRadius * currentRadius)) continue;
+            float darkenLevel = (x >= wallLowerX && x < wallUpperX 
+                                && y >= wallLowerY && y < wallUpperY) 
+                                ? (curDarken / darkenFactor) : curDarken;
+            framebf_drawPixel(x, y, darkenPixel(mz->bitmap[y * MAZE_SZ + x], darkenLevel));
+        }
+    }
+}
+
+
 void removeFOV(const Asset *asset) {
     for (int y = asset->posY - currentRadius+asset->height/2; 
             y <= asset->posY + currentRadius+asset->height/2; ++y) {

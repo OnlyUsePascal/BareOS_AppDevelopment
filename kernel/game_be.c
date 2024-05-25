@@ -184,12 +184,12 @@ void game_start(Maze *mz){
             }
         
             if (dir == -1) continue; 
+            // TODO: spinning
             Position posTmp = {pl->pos->posX, pl->pos->posY};
             update_pos(&posTmp, dir);
             uart_puts("> "); debug_pos(posTmp);
             
             if (posTmp.posX < 0 || posTmp.posY < 0) continue;
-            //TODO: get map state base on its level
             int mazeState = mz->bitmapState[MAZE_SZ_CELL * posTmp.posY + posTmp.posX];
             str_debug_num(mazeState);
             if (mazeState == 0) {
@@ -245,48 +245,31 @@ void effect_portal(Maze *mz, Player *pl){
 
 void effect_bomb(Maze *mz, Player *pl){
     Bomb *bo = mz->bomb;
-    Position *wall = bo->wall;
+    Position *weakWall = bo->weakWall;
     bool usable = (bo->itemMeta->collided && !bo->used);
     // can use = collided = 1 && used = 0
     // cannot use collied = 0 || used = 1
-    // brighten the wall, 
     
+    // check if pl stand near
+    int dx = weakWall->posX - pl->pos->posX,
+        dy = weakWall->posY - pl->pos->posY;
+    str_debug_num(dx); str_debug_num(dy);
+    if (dx * dx + dy * dy != 1) return; //should stand adjacent
     if (bo->used) return;
     
-    // modified FOV
-    int lowerX = wall->posX * MAZE_SZ_CELL_PIXEL, 
-        upperX = (wall->posX + 1) * MAZE_SZ_CELL_PIXEL,
-        lowerY = wall->posY * MAZE_SZ_CELL_PIXEL,
-        upperY = (wall->posY + 1) * MAZE_SZ_CELL_PIXEL;
-    int lx = pl->asset->posX - currentRadius + pl->asset->height/2,
-        ux = pl->asset->posX + currentRadius + pl->asset->height/2,
-        ly = pl->asset->posY - currentRadius + pl->asset->height/2,
-        uy = pl->asset->posY + currentRadius + pl->asset->height/2;
-    
-    // uart_puts("["); uart_dec(lowerX); uart_puts(","); uart_dec(upperX); uart_puts(","); uart_dec(lowerY); uart_puts(","); uart_dec(upperY); uart_puts(","); uart_puts("]\n");
-    // uart_puts("["); uart_dec(lx); uart_puts(","); uart_dec(ux); uart_puts(","); uart_dec(ly); uart_puts(","); uart_dec(uy); uart_puts(","); uart_puts("]\n");
-    
-    for (int x = lx; x < ux; x++) {
-        for (int y = ly; y < uy; y++) {
-            if (x >= 0 && y >= 0 && x < MAZE_SZ && y < MAZE_SZ) {
-                int dx = x - pl->asset->posX - pl->asset->height/2, 
-                    dy = y - pl->asset->posY - pl->asset->height/2;
-                if (dx * dx + dy * dy <= currentRadius * currentRadius) {
-                    float darkenLevel = (x >= lowerX && x < upperX 
-                                        && y >= lowerY && y < upperY) 
-                                        ? (curDarken / darkenFactor) : curDarken;
-                    framebf_drawPixel(x, y, darkenPixel(mz->bitmap[y * MAZE_SZ + x], darkenLevel));
-                }
-            }
-        }
-    }
+    // highlight weak wall
+    drawFOVWeakWall(mz, pl->asset, bo->weakWall);
     drawAsset(pl->asset);
     
-    // then draw the original wall (or blow it up if not used)
+    // then draw the original wall (or blow it up)
     wait_msec(250000);
+    int wallLowerX = weakWall->posX * MAZE_SZ_CELL_PIXEL, 
+        wallUpperX = (weakWall->posX + 1) * MAZE_SZ_CELL_PIXEL,
+        wallLowerY = weakWall->posY * MAZE_SZ_CELL_PIXEL,
+        wallUpperY = (weakWall->posY + 1) * MAZE_SZ_CELL_PIXEL;
     if (usable) {
-        for (int x = lowerX; x < upperX; x++){
-            for (int y = lowerY; y < upperY; y++){
+        for (int x = wallLowerX; x < wallUpperX; x++){
+            for (int y = wallLowerY; y < wallUpperY; y++){
                 mz->bitmap[y * MAZE_SZ + x] = mz->pathColor;
             }
         }
@@ -294,13 +277,11 @@ void effect_bomb(Maze *mz, Player *pl){
     drawFOV(mz, pl->asset);
     drawAsset(pl->asset);
     
-    // TODO: check if pl stand near
     // update BE
     if (usable){
         bo->used = true;
-        mz->bitmapState[wall->posY * MAZE_SZ_CELL + wall->posX] = 1;
+        mz->bitmapState[weakWall->posY * MAZE_SZ_CELL + weakWall->posX] = 1;
     }
-    
 }
 
 

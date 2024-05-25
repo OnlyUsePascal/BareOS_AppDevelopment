@@ -44,7 +44,7 @@ typedef struct {
 
 typedef struct {
   ItemMeta *itemMeta;
-  Position *wall;
+  Position *weakWall;
   bool used;
 } Bomb;
 

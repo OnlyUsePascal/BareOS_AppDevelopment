@@ -28,7 +28,7 @@ int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz, const unsigne
 void drawFOVMovement(Position initialPlayerPosition, Direction dir);
 void removeFOV(const Asset *asset);
 void drawFOV(const Maze *maze, const Asset *asset);
-
+void drawFOVWeakWall(const Maze *mz, const Asset *asset, const Asset *weakWall);
 void drawDialog(const char *title, const char *text);
 // void removeDialog(const Position *pos);
 
