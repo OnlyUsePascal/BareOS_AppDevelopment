@@ -3,13 +3,15 @@
 #include "../lib/game_fe.h"
 #include "../lib/framebf.h"
 #include "../lib/def.h"
-#include "../lib/util_str.h"
+#include "../lib/utils.h"
+// #include "../lib/util_str.h"
 #include "../lib/data/game/game_menu.h"
 #include "../lib/data/game/maze.h"
 #include "../lib/data/game/maze_state.h"
 #include "../lib/data/game/player.h"
 #include "../lib/data/game/item.h"
 #include "../lib/data/data_menu_background.h"
+
 
 // ===== BACK-END =====
 const char directionKey[] = {'w', 'a', 's', 'd'};
@@ -23,32 +25,38 @@ void game_enter() {
     // init
     framebf_init(GAME_W, GAME_H, GAME_W, GAME_H);
     framebf_drawImg(0, 0, MENU_BACKGROUND_SIZE, MENU_BACKGROUND_SIZE, bitmap_menu_background);
-    
     curDarken = 1.0f;
     currentRadius = 40;
+    
     // maze1
     Asset playerAsset = {ASSET_HIDDEN, ASSET_HIDDEN, PLAYER_SZ, PLAYER_SZ, bitmap_player};
     Position playerPos = {0, MAZE_SZ_CELL / 2};
     Player player = {&playerAsset, &playerPos};
+    
     Asset bombAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_bomb};
-    Position bombPos = {1, 9};
-    Item bomb = {&bombAsset, &bombPos, BOMB, 0};
+    Position bombPos = {1, 9}, bombWall = {2,8};
+    ItemMeta bombMeta = {&bombAsset, &bombPos, BOMB, 0};
+    Bomb bomb = {&bombMeta, &bombWall, false};
+    
     Asset visionAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_vision};
-    Position visionPos = {2, 5};
-    Item vision = {&visionAsset, &visionPos, VISION, 0};
+    Position visionPos = {7, 5};
+    ItemMeta visionMeta = {&visionAsset, &visionPos, VISION, 0};
+    
     Asset portalAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_portal};
-    Position portalPos = {7, 5};
-    Item portal = {&portalAsset, &portalPos, PORTAL, 0};
-    Maze mz1 = {1, -1, bitmap_maze, {&bomb, &vision, &portal}, 3, &player};
+    Position portalPos = {2, 5}, portalDes = {4,5};
+    ItemMeta portalMeta = {&portalAsset, &portalPos, PORTAL, 0};
+    Portal portal = {&portalMeta, &portalDes};
+    
+    Maze mz1 = {.level = 1, .pathColor = -1, .bitmap = bitmap_maze1, .bitmapState = bitmap_mazeState1,
+                .itemMetas = {&bombMeta, &visionMeta, &portalMeta}, .itemMetasSz = 3, 
+                .portal = &portal, .bomb = &bomb,
+                .player = &player};
     
     // maze2
     Maze mz2 = {};
     Maze mz3 = {};
     
     Maze *mazes[] = {&mz1, &mz2, &mz3};
-    
-    
-    
     
     
     
@@ -63,7 +71,8 @@ void game_enter() {
 
     while (1) {
         drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
-        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz, MENU_FOREGND, MENU_BACKGND);
+        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, 
+                                optSz, MENU_FOREGND, MENU_BACKGND);
 
         switch (optIdx) {
             case 0: //start
@@ -90,7 +99,8 @@ void game_enter() {
 int game_menu_enter() {
     // init
     framebf_init(GAME_W, GAME_H, GAME_W, GAME_H);
-    framebf_drawImg(115, 130, GAME_MENU_SZ_W, GAME_MENU_SZ_H, bitmap_game_menu);
+    framebf_drawImg(115, 130, GAME_MENU_SZ_W, 
+                    GAME_MENU_SZ_H, bitmap_game_menu);
 
     // menu
     int menuPosX = 220, menuPosY = 220, yOffset = 50;
@@ -99,7 +109,8 @@ int game_menu_enter() {
 
     while (1) {
         drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
-        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz, MENU_FOREGND, GAME_MENU_BACKGND);
+        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, 
+                                optSz, MENU_FOREGND, GAME_MENU_BACKGND);
 
         switch (optIdx) {
             case 0: //start
@@ -117,76 +128,82 @@ int game_menu_enter() {
 void game_start(Maze *mz){
     uart_puts("Starting Game...\n");
     bool isFOVShown = true;
-    
-    Player *player = mz->player;
-
+    Player *pl = mz->player;
     getMazePathColor(mz);
     
-    posBeToFe(player->pos, player->asset);
-    for (int i = 0 ; i < mz->itemsSz; i++){
-        Item *item = mz->items[i];        
-        posBeToFe(item->pos, item->asset);
-        if(!(item->collided)) embedAsset(mz, item->asset, true);
+    posBeToFe(pl->pos, pl->asset);
+    for (int i = 0 ; i < mz->itemMetasSz; i++){
+        ItemMeta *itemMeta = mz->itemMetas[i];        
+        posBeToFe(itemMeta->pos, itemMeta->asset);
+        if(!(itemMeta->collided)) embedAsset(mz, itemMeta->asset, true);
     }
     
-    render_scene(mz, player->asset, isFOVShown);
-        
+    render_scene(mz, pl->asset, isFOVShown);
+    // TODO: paint breakable wall
+    
     // movement 
     while (1) {
         uart_puts("---\n");
         char c = uart_getc();
-        debug_pos(*(player->pos));
+        debug_pos(*(pl->pos));
         
         // DEBUG / screen shading
         if(c == 'o'){
-            adjustBrightness(mz, player->asset, true);
+            adjustBrightness(mz, pl->asset, true);
         }
         else if(c == 'p'){
-            adjustBrightness(mz, player->asset, false);
+            adjustBrightness(mz, pl->asset, false);
         } 
+        else if (c == 'k') {
+            isFOVShown = !isFOVShown;
+            render_scene(mz, pl->asset, isFOVShown);
+        }
         else if (c == 27) { // game menu
             int game_stage = game_menu_enter();   
             switch (game_stage) {
             case 0:
-                render_scene(mz, player->asset, isFOVShown);
+                render_scene(mz, pl->asset, isFOVShown);
                 break;
             case 1:
                 clearScreen();
-                framebf_drawImg(0, 0, MENU_BACKGROUND_SIZE, MENU_BACKGROUND_SIZE, bitmap_menu_background);
+                framebf_drawImg(0, 0, MENU_BACKGROUND_SIZE, 
+                                MENU_BACKGROUND_SIZE, bitmap_menu_background);
                 return;
             }
             // str_debug_num(game_stage);
-        } 
-        else if (c == 'k') {
-            isFOVShown = !isFOVShown;
-            render_scene(mz, player->asset, isFOVShown);
         }
+        else if (c == 'q'){
+            effect_bomb(mz, pl);
+        } 
         else {
-            //TODO: movement
+            // spinning
             Direction dir = -1;
             for (int i = 0; i < 4; i++){
                 if (directionKey[i] == c){
                     dir = i; break;
                 }
             }
-        
             if (dir == -1) continue; 
-            Position posTmp = {player->pos->posX, player->pos->posY};
-            update_pos(&posTmp, dir);
-            uart_puts("> "); debug_pos(posTmp);
+            drawFOV(mz, pl->asset);
+            drawMoveAnimation(pl->asset, dir, 2);
             
-            if (posTmp.posX < 0 || posTmp.posY < 0) continue;
-            //TODO: get map state base on its level
-            int mazeState = bitmap_mazeState1[MAZE_SZ_CELL * posTmp.posY + posTmp.posX];
+            // moving
+            Position posTmp = {pl->pos->posX, pl->pos->posY};
+            update_pos(&posTmp, dir); uart_puts("-> "); debug_pos(posTmp);
+            if (posTmp.posX < 0 || posTmp.posY < 0 || 
+                posTmp.posX >= MAZE_SZ_CELL || posTmp.posY >= MAZE_SZ_CELL) continue;
+                
+            int mazeState = mz->bitmapState[MAZE_SZ_CELL * posTmp.posY + posTmp.posX];
             str_debug_num(mazeState);
             if (mazeState == 0) {
                 str_debug("hit wall!"); continue;
             } 
             
-            update_pos(player->pos, dir);
-            Item *collidedItem = detect_collision(*(player->pos), mz->items, mz->itemsSz);
-            drawMovement(mz, player->asset, dir, collidedItem);
-            handle_collision(collidedItem, mz, player);
+            // post-moving
+            update_pos(pl->pos, dir);
+            ItemMeta *collidedItem = detect_collision(*(pl->pos), mz->itemMetas, mz->itemMetasSz);
+            drawMovement(mz, pl->asset, dir, collidedItem);
+            handle_collision(collidedItem, mz, pl);
         }
     } 
 }
@@ -211,13 +228,65 @@ void game_exit() {
 
 // ============================== GAME ITEM
 void effect_vision(Maze *maze, Player *player){
-    str_debug("item vision");
     currentRadius = currentRadius + 20;
     adjustBrightness(maze, player->asset, false);
 }
 
 
+void effect_portal(Maze *mz, Player *pl){
+    wait_msec(125000);   
+    Position *des = mz->portal->des;
 
+    // erase fov -> change position in FE, BE -> draw again 
+    removeFOV(pl->asset);
+    pl->pos->posX = des->posX;
+    pl->pos->posY = des->posY;
+    posBeToFe(pl->pos, pl->asset);
+    drawFOV(mz, pl->asset);
+    drawAsset(pl->asset);
+}
+
+
+void effect_bomb(Maze *mz, Player *pl){
+    Bomb *bo = mz->bomb;
+    Position *weakWall = bo->weakWall;
+    bool usable = (bo->itemMeta->collided && !bo->used);
+    // can use = collided = 1 && used = 0
+    // cannot use collied = 0 || used = 1
+    
+    // check if pl stand near
+    int dx = weakWall->posX - pl->pos->posX,
+        dy = weakWall->posY - pl->pos->posY;
+    str_debug_num(dx); str_debug_num(dy);
+    if (dx * dx + dy * dy != 1) return; //should stand adjacent
+    if (bo->used) return;
+    
+    // highlight weak wall
+    drawFOVWeakWall(mz, pl->asset, bo->weakWall);
+    drawAsset(pl->asset);
+    
+    // then draw the original wall (or blow it up)
+    wait_msec(250000);
+    int wallLowerX = weakWall->posX * MAZE_SZ_CELL_PIXEL, 
+        wallUpperX = (weakWall->posX + 1) * MAZE_SZ_CELL_PIXEL,
+        wallLowerY = weakWall->posY * MAZE_SZ_CELL_PIXEL,
+        wallUpperY = (weakWall->posY + 1) * MAZE_SZ_CELL_PIXEL;
+    if (usable) {
+        for (int x = wallLowerX; x < wallUpperX; x++){
+            for (int y = wallLowerY; y < wallUpperY; y++){
+                mz->bitmap[y * MAZE_SZ + x] = mz->pathColor;
+            }
+        }
+    }
+    drawFOV(mz, pl->asset);
+    drawAsset(pl->asset);
+    
+    // update BE
+    if (usable){
+        bo->used = true;
+        mz->bitmapState[weakWall->posY * MAZE_SZ_CELL + weakWall->posX] = 1;
+    }
+}
 
 
 
@@ -233,7 +302,7 @@ void effect_vision(Maze *maze, Player *player){
 // =============================== GAME FLOW
 void render_scene(const Maze *maze, const Asset *asset, const bool isFOVShown) {
     if (!isFOVShown) {
-        framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze);
+        framebf_drawImg(0,0, MAZE_SZ, MAZE_SZ, bitmap_maze1);
     } else {
         clearScreen();
         drawFOV(maze, asset);
@@ -243,22 +312,22 @@ void render_scene(const Maze *maze, const Asset *asset, const bool isFOVShown) {
 }
 
 
-Item* detect_collision(Position playerPos, Item *items[], int itemsSz) {
-    for (int i = 0 ; i < itemsSz; i++){
-        if (cmp_pos(playerPos, *(items[i]->pos)) 
-                && items[i]->collided == 0) {
-            return items[i];
+ItemMeta* detect_collision(Position playerPos, ItemMeta *itemMetas[], int itemMetasSz) {
+    for (int i = 0 ; i < itemMetasSz; i++){
+        if (cmp_pos(playerPos, *(itemMetas[i]->pos)) 
+                && itemMetas[i]->collided == 0) {
+            return itemMetas[i];
         }
     }
     return NULL;  
 }
 
 
-void handle_collision(Item *item, Maze *maze, Player *player) {
-    if (item == NULL) return;
+void handle_collision(ItemMeta *itemMeta, Maze *maze, Player *player) {
+    if (itemMeta == NULL) return;
 
-    debug_item(*item);
-    item->collided = 1;
+    debug_item(*itemMeta);
+    itemMeta->collided = 1;
 
     // INSTRUCTION
     static unsigned char seeing_item_first_time = 0;
@@ -275,14 +344,14 @@ void handle_collision(Item *item, Maze *maze, Player *player) {
         "PORTAL DESCRIPTION",
     };
 
-    if (!(seeing_item_first_time & (1 << item->id))) {
-        seeing_item_first_time |= (1 << item->id);
+    if (!(seeing_item_first_time & (1 << itemMeta->id))) {
+        seeing_item_first_time |= (1 << itemMeta->id);
 
-        drawDialog(item_names[item->id], item_descs[item->id]);
+        drawDialog(item_names[itemMeta->id], item_descs[itemMeta->id]);
         while (true) {
             char c = uart_getc();
             if (c == '\n') {
-                // removeDialog(item->pos);
+                // removeDialog(itemMeta->pos);
                 render_scene(maze, player->asset, true);
                 break;
             }
@@ -290,10 +359,17 @@ void handle_collision(Item *item, Maze *maze, Player *player) {
     }
     
     // TODO: EFFECT
-    switch (item->id) {
+    switch (itemMeta->id) {
         case VISION:
             effect_vision(maze, player);
             break;
+        case PORTAL:
+            effect_portal(maze, player);
+            break;
+        case BOMB:{
+            // effect_bomb(maze, player);
+            break;
+        }
     }
 }
 
@@ -323,9 +399,9 @@ void debug_pos(Position pos){
 }
 
 
-void debug_item(Item item) {
-    uart_puts("[Item:");
-    switch (item.id) {
+void debug_item(ItemMeta itemMeta) {
+    uart_puts("[ItemMeta:");
+    switch (itemMeta.id) {
         case BOMB:
             uart_puts("Bomb");
             break;

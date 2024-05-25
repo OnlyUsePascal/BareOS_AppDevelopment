@@ -83,11 +83,36 @@ void drawFOV(const Maze *maze, const Asset *asset) {
         for (int x = asset->posX - currentRadius+asset->height/2; 
                 x <= asset->posX + currentRadius+asset->height/2; ++x) {
             int dx = x - asset->posX - asset->height/2, dy = y - asset->posY- asset->height/2;
-            if (dx * dx + dy * dy <= currentRadius * currentRadius) {
-                if (x >= 0 && y >= 0 && x < MAZE_SZ && y < MAZE_SZ) {
-                    framebf_drawPixel(x, y, darkenPixel(maze->bitmap[y * MAZE_SZ + x], curDarken));
-                }
+            if (dx * dx + dy * dy <= currentRadius * currentRadius 
+                    && x >= 0 && y >= 0 && x < MAZE_SZ && y < MAZE_SZ) {
+                framebf_drawPixel(x, y, darkenPixel(maze->bitmap[y * MAZE_SZ + x], curDarken));
             }
+        }
+    }
+}
+
+
+void drawFOVWeakWall(const Maze *mz, const Asset *asset, const Asset *weakWall){
+    int wallLowerX = weakWall->posX * MAZE_SZ_CELL_PIXEL, 
+        wallUpperX = (weakWall->posX + 1) * MAZE_SZ_CELL_PIXEL,
+        wallLowerY = weakWall->posY * MAZE_SZ_CELL_PIXEL,
+        wallUpperY = (weakWall->posY + 1) * MAZE_SZ_CELL_PIXEL,
+        fovLowerX = asset->posX - currentRadius + asset->height/2,
+        fovUpperX = asset->posX + currentRadius + asset->height/2,
+        fovLowerY = asset->posY - currentRadius + asset->height/2,
+        fovUpperY = asset->posY + currentRadius + asset->height/2;
+    
+    for (int x = fovLowerX; x < fovUpperX; x++) {
+        for (int y = fovLowerY; y < fovUpperY; y++) {
+            if (!(x >= 0 && y >= 0 && x < MAZE_SZ && y < MAZE_SZ)) continue;
+            
+            int dx = x - asset->posX - asset->height/2, 
+                dy = y - asset->posY - asset->height/2;
+            if (!(dx * dx + dy * dy <= currentRadius * currentRadius)) continue;
+            float darkenLevel = (x >= wallLowerX && x < wallUpperX 
+                                && y >= wallLowerY && y < wallUpperY) 
+                                ? (curDarken / darkenFactor) : curDarken;
+            framebf_drawPixel(x, y, darkenPixel(mz->bitmap[y * MAZE_SZ + x], darkenLevel));
         }
     }
 }
@@ -107,7 +132,7 @@ void removeFOV(const Asset *asset) {
 }
 
 
-void drawMovement(Maze *maze, Asset *playerAsset, Direction dir, Item *collidedItem){
+void drawMovement(Maze *maze, Asset *playerAsset, Direction dir, ItemMeta *collidedItem){
     // TODO: animation with frame
     int stepOffset = MAZE_SZ_CELL_PIXEL / STEP_AMOUNT;
     int posXFinal = playerAsset->posX + xOffset[dir] * MAZE_SZ_CELL_PIXEL;
@@ -121,15 +146,12 @@ void drawMovement(Maze *maze, Asset *playerAsset, Direction dir, Item *collidedI
                             playerAsset->posY + yOffset[dir] * stepOffset);
         drawFOV(maze, playerAsset);
         drawMoveAnimation(playerAsset, dir, i);
-        wait_msec(250000);
+        wait_msec(125000);
     }
     
     // walk the last step
     removeFOV(playerAsset);
-    if (collidedItem != NULL) {
-        //replace embeded item with background
-        embedAsset(maze, collidedItem->asset, false); 
-    }
+    if (collidedItem != NULL) embedAsset(maze, collidedItem->asset, false);
     updateAssetPos(playerAsset, posXFinal, posYFinal);
     drawFOV(maze, playerAsset);
     drawMoveAnimation(playerAsset, dir, STEP_AMOUNT - 1);

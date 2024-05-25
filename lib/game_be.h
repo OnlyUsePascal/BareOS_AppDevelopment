@@ -27,21 +27,26 @@ typedef enum {
   PORTAL,
 } ItemId;
 
-
+// TODO: be more specific
 typedef struct {
   Asset *asset;
   Position *pos;
   ItemId id;
   int collided;
-} Item;
+} ItemMeta;
 
 
 typedef struct {
-  int radius;
-  int level; 
-  int fadingSpeed; // ???
-} Light;
+  // inherit ItemMeta
+  ItemMeta *itemMeta;
+  Position *des;
+} Portal;
 
+typedef struct {
+  ItemMeta *itemMeta;
+  Position *weakWall;
+  bool used;
+} Bomb;
 
 typedef struct {
   Asset *asset;
@@ -61,9 +66,12 @@ typedef struct {
   int level;
   unsigned long pathColor;
   unsigned long *bitmap;
-  Item *items[10];
-  int itemsSz;
+  int *bitmapState;
+  ItemMeta *itemMetas[10];
+  int itemMetasSz;
   Player *player;
+  Portal *portal;
+  Bomb *bomb;
 } Maze;
 
 extern const int xOffset[];
@@ -83,7 +91,7 @@ void clearScreen();
 void cli_toggle_fov();
 #endif
 
-Item* detect_collision(Position playerPos, Item *items[], int itemsSz);
+ItemMeta* detect_collision(Position playerPos, ItemMeta *itemMetas[], int itemMetasSz);
 
 
 
