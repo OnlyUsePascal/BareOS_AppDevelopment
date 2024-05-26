@@ -20,12 +20,14 @@ const int yOffset[] = {-1, 0, 1, 0};
 const int xOffset[] = {0, -1, 0, 1};
 uint16_t currentRadius = 40;
 
+
 void render_scene(const Maze *maze, const Asset *asset, const bool isFOVShown);
 void debug_pos(Position pos);
 void update_pos(Position *des, Direction dir);
 void handle_collision(ItemMeta *item, Maze *maze, Player *player);
 int cmp_pos(Position pos1, Position pos2);
 void debug_item(ItemMeta item);
+void game_over(int *_optIdx);
 
 void game_enter() {
     // init
@@ -75,7 +77,6 @@ void game_enter() {
     int menuPosX = 220, menuPosY = 250, yOffset = 50;
     char *opts[] = {"Start", "Choose Level", "How To Play?", "Exit"};
     int optSz = sizeof(opts) / sizeof(opts[0]);
-// <<<<<<< HEAD
     
     int optIdx = -1;
     while (1) {
@@ -91,6 +92,7 @@ void game_enter() {
         switch (optIdx) {
             case 0: //start
                 game_start(mazes[1], &optIdx);
+                uart_puts("> optIdx:"); uart_dec(optIdx); uart_puts("\n");
                 break;
 
             case 1: //continue
@@ -228,46 +230,21 @@ void game_start(Maze *mz, int *_optIdx){
             ItemMeta *collidedItem = detect_collision(*(pl->pos), mz->itemMetas, mz->itemMetasSz);
             drawMovement(mz, pl->asset, dir, collidedItem);
             
-            // darken screen interval
+            // darken screen interval + game over
             pl->step += 1; 
             if (pl->step % 3 == 0) {
                 adjustBrightness(mz, pl->asset, true);
                 if (curDarken <= LIGHT_THRESHOLD) {
-                    str_debug("game over :(");
-                    wait_msec(1000000);
-                    clearScreen();
-                    
-                    
-                    font_drawString(150, 150, "Game Over :(", MENU_FOREGND, 2, 1);
-                    int menuPosX = 220, menuPosY = 250, yOffset = 50;
-                    char *opts[] = {"Start Over", "Rage Quit ?"};
-                    int optSz = sizeof(opts) / sizeof(opts[0]);
-
-                    drawMenu(menuPosX, menuPosY, yOffset, opts, 
-                                optSz, MENU_FOREGND, MENU_BACKGND, true);
-                    int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, 
-                                            optSz, MENU_FOREGND, MENU_BACKGND);
-
-                    switch (optIdx) {
-                        case 0: //start over
-                            // TODO: start over mechanic ?
-                            *_optIdx = 0;
-                            clearScreen();
-                            return;
-                        case 1: //quit
-                            clearScreen();
-                            framebf_drawImg(0, 0, MENU_BACKGROUND_SIZE, 
-                                            MENU_BACKGROUND_SIZE, bitmap_menu_background);
-                            return;
-                    }
+                    game_over(_optIdx);
+                    return;
                 }
             }
             
+            // colision 
             handle_collision(collidedItem, mz, pl);
         }
     } 
 }
-
 
 
 void game_continue() {
@@ -332,6 +309,47 @@ void game_exit() {
     uart_puts("Exiting game...\n");
     font_drawString(150, 150, "Ta reng Ta reng Ta reng", MENU_FOREGND, 2, 1);
 }
+
+
+void game_over(int *_optIdx) {
+    str_debug("game over :(");
+    wait_msec(1000000);
+    clearScreen(); 
+    
+    font_drawString(150, 150, "Game Over :(", MENU_FOREGND, 2, 1);
+    int menuPosX = 220, menuPosY = 250, yOffset = 50;
+    char *opts[] = {"Start Over", "Rage Quit ?"};
+    int optSz = sizeof(opts) / sizeof(opts[0]);
+
+    drawMenu(menuPosX, menuPosY, yOffset, opts, 
+                optSz, MENU_FOREGND, MENU_BACKGND, true);
+    int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, 
+                            optSz, MENU_FOREGND, MENU_BACKGND);
+
+    clearScreen();  
+    switch (optIdx) {
+        case 0: {
+            *_optIdx = 0;
+            return;
+        }
+        case 1: {
+            //quit
+            framebf_drawImg(0, 0, MENU_BACKGROUND_SIZE, 
+                            MENU_BACKGROUND_SIZE, bitmap_menu_background);
+            return;
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
 
 
 // ============================== GAME ITEM
