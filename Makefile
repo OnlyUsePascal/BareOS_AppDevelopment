@@ -13,7 +13,7 @@ DIR_ROOT := $(MAKEFILE_DIR)
 CFILES = $(wildcard $(DIR_KER)/*.c)
 OFILES = $(CFILES:$(DIR_KER)/%.c=$(DIR_BUI)/%.o)
 
-all:  $(DIR_BUI)/kernel8.img run
+all: $(DIR_BUI)/kernel8.img run
 
 $(DIR_BUI)/boot.o: $(DIR_KER)/boot.S
 	aarch64-none-elf-gcc -I$(DIR_ROOT) $(GCCFLAGS) -c $< -o $@

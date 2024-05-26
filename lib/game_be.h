@@ -24,29 +24,32 @@ typedef enum {
   TRAP,
   BOMB,
   VISION,
-  COIN
+  PORTAL,
 } ItemId;
-
 
 typedef struct {
   Asset *asset;
   Position *pos;
   ItemId id;
-  int collided;
-} Item;
-
-
-typedef struct {
-  int radius;
-  int level; 
-  int fadingSpeed; // ???
-} Light;
-
+  bool collided;
+} ItemMeta;
 
 typedef struct {
-  Position pos;
-  Light light;
-  int speed; // ???
+  // inherit ItemMeta
+  ItemMeta *itemMeta;
+  Position *des;
+} Portal;
+
+typedef struct {
+  ItemMeta *itemMeta;
+  Position *weakWall;
+  bool used;
+} Bomb;
+
+typedef struct {
+  Asset *asset;
+  Position *pos;
+  uint32_t step;
 } Player;
 
 
@@ -62,18 +65,22 @@ typedef struct {
   int level;
   unsigned long pathColor;
   unsigned long *bitmap;
-  Item *items[10];
-  int itemsSz;
+  int *bitmapState;
+  ItemMeta *itemMetas[10];
+  int itemMetasSz;
+  Player *player;
+  Portal *portal;
+  Bomb *bomb;
 } Maze;
 
 extern const int xOffset[];
 extern const int yOffset[];
 extern const char directionKey[];
-static uint16_t currentRadius = 100;
+extern uint16_t currentRadius;
 
 void game_enter();
 int game_menu_enter();
-void game_start();
+void game_start(Maze *mz, int *_optIdx);
 void game_continue();
 void game_help();
 void game_exit();
@@ -83,7 +90,7 @@ void clearScreen();
 void cli_toggle_fov();
 #endif
 
-Item* detect_collision(Position playerPos, Item *items[], int itemsSz);
+ItemMeta* detect_collision(Position playerPos, ItemMeta *itemMetas[], int itemMetasSz);
 
 
 

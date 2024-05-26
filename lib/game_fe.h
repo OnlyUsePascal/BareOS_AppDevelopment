@@ -15,25 +15,26 @@
 #define GAME_MENU_SZ_W 350
 #define GAME_MENU_SZ_H 271
 #define ASSET_HIDDEN -1
-
+#define LIGHT_THRESHOLD 0.05
 #define MAZE_SZ_CELL_PIXEL 40 
 #define PLAYER_SZ 30
 #define ITEM_SZ 20
 
 
 void clearScreen();
-void drawMenu(int posX, int posY, int yOffset, char *opts[], int optSz);
+
+void drawMenu(int posX, int posY, int spacing, char *opts[], int optSz, uint32_t foreGnd, uint32_t backGnd, bool fill);
 int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz, const unsigned int foregnd, const unsigned int backgnd);
 
 void drawFOVMovement(Position initialPlayerPosition, Direction dir);
 void removeFOV(const Asset *asset);
 void drawFOV(const Maze *maze, const Asset *asset);
-
+void drawFOVWeakWall(const Maze *mz, const Asset *asset, const Asset *weakWall);
 void drawDialog(const char *title, const char *text);
-void removeDialog(const Position *pos);
+// void removeDialog(const Position *pos);
 
-void drawMovement(Maze *maze, Asset *asset, Direction dir, Item *collidedItem);
-void removeAsset(const Asset *asset);
+void drawMovement(Maze *maze, Asset *asset, Direction dir, ItemMeta *collidedItem);
+// void removeAsset(const Asset *asset);
 void drawAsset(const Asset *asset);
 void embedAsset(const Maze *maze, const Asset *asset, bool fill);
 void updateAssetPos(Asset *asset, int x, int y);
@@ -45,9 +46,7 @@ void getMazePathColor(Maze *maze);
 void adjustBrightness(const Maze *maze, const Asset *asset, bool darken);
 uint64_t darkenPixel(uint64_t color, const float factor);
 
-extern float cur_darken;
-extern const float darken_factor;
-extern float cur_lighten;
-extern const float lighten_factor;
+extern float curDarken;
+extern const float darkenFactor;
 
 #endif

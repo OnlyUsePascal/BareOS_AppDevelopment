@@ -6,6 +6,7 @@
 #include "../lib/data/game/maze.h"
 #include "../lib/data/data_font.h"
 #include "../lib/data/game/player_movement.h"
+#include "../lib/font.h"
 
 #define STEP_AMOUNT 3
 #define RECT_BORDER 10
@@ -13,46 +14,48 @@
 #define DIALOG_EXIT_MSG "Press Enter to continue"
 #define DIALOG_EXIT_MSG_SIZE 23
 
-float cur_darken = 1.0f; 
-const float darken_factor = 0.8f; 
-float cur_lighten = 1.0f; 
-const float lighten_factor = 1.25f;
-
+float curDarken = 1.0f; 
+const float darkenFactor = 0.64f; 
 static uint16_t dialog_width = 0;
+
 
 void clearScreen(){
     framebf_drawRect(0, 0, GAME_W, GAME_H, MENU_BACKGND, 1);
 }
 
 
-void drawMenu(int posX, int posY, int spacing, char *opts[], int optSz){
+void drawMenu(int posX, int posY, int spacing, char *opts[], 
+                int optSz, uint32_t foreGnd, uint32_t backGnd, bool fill){
     for (int i = 0; i < optSz; i++){
-        font_drawString(posX, posY + i * spacing, opts[i], MENU_FOREGND, 2, 1);
+        font_drawString(posX, posY + i * spacing, 
+                        opts[i], (fill) ? foreGnd : backGnd, 2, 1);
     }
 }
 
-
-int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz, const unsigned int foregnd, const unsigned int backgnd) {
+int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz, 
+                const unsigned int foregnd, const unsigned int backgnd) {
     int actionIdx = 0;
-    font_drawChar(markPosX, markPosY, '>', foregnd, 2);
+    font_drawChar(markPosX, markPosY, '>', foregnd, 2, 1);
 
     while (1) {
         char c = uart_getc();
-        uart_sendc(c);
-        uart_sendc('\n');
+        uart_sendc(c); uart_sendc('\n');
         if (c == 'w' || c == 'a') {
-            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', backgnd, 2);
+            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', backgnd, 2, 1);
             actionIdx = (actionIdx - 1) % optSz;
             if (actionIdx < 0) actionIdx += optSz;
-            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', foregnd, 2);
+            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', foregnd, 2, 1);
         } else if (c == 's' || c == 'd') {
-            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', backgnd, 2);
+            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', backgnd, 2, 1);
             actionIdx = (actionIdx + 1) % optSz;
-            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', foregnd, 2);
+            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', foregnd, 2, 1);
         } else if (c == '\n') {
             break;
         }
     }
+    
+    // remove selector
+    font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', backgnd, 2, 1);
     return actionIdx;
 }
 
@@ -62,20 +65,6 @@ void drawAsset(const Asset *asset) {
         for (int j = asset->posY, posY = 0; posY < asset->height; j++, posY++) {
             if (asset->bitmap[posX + posY * asset->width] != 0)
                 framebf_drawPixel(i, j, asset->bitmap[posX + posY * asset->width]);
-        }
-    }
-}
-
-
-void removeAsset(const Asset *asset) {
-    //replace with maze pixel
-    // TODO: move to storage files
-    Asset maze = {0, 0, MAZE_SZ_CELL * MAZE_SZ_CELL_PIXEL,
-                  MAZE_SZ_CELL * MAZE_SZ_CELL_PIXEL, bitmap_maze};
-
-    for (int i = asset->posX, posX = 0; posX < asset->width; i++, posX++) {
-        for (int j = asset->posY, posY = 0; posY < asset->height; j++, posY++) {
-            framebf_drawPixel(i, j, maze.bitmap[i + j * maze.width]);
         }
     }
 }
@@ -94,34 +83,61 @@ void embedAsset(const Maze *maze, const Asset *asset, bool fill){
 
 
 void drawFOV(const Maze *maze, const Asset *asset) {
-    for (int y = asset->posY - currentRadius; y <= asset->posY + currentRadius; ++y) {
-        for (int x = asset->posX - currentRadius; x <= asset->posX + currentRadius; ++x) {
-            int dx = x - asset->posX, dy = y - asset->posY;
-            if (dx * dx + dy * dy <= currentRadius * currentRadius) {
-                if (x >= 0 && y >= 0 && x < MAZE_SZ && y < MAZE_SZ) {
-                    framebf_drawPixel(x, y, darkenPixel(maze->bitmap[y * MAZE_SZ + x], cur_darken));
-                }
+    for (int y = asset->posY - currentRadius+asset->height/2; 
+            y <= asset->posY + currentRadius+asset->height/2; ++y) {
+        for (int x = asset->posX - currentRadius+asset->height/2; 
+                x <= asset->posX + currentRadius+asset->height/2; ++x) {
+            int dx = x - asset->posX - asset->height/2, dy = y - asset->posY- asset->height/2;
+            if (dx * dx + dy * dy <= currentRadius * currentRadius 
+                    && x >= 0 && y >= 0 && x < MAZE_SZ && y < MAZE_SZ) {
+                framebf_drawPixel(x, y, darkenPixel(maze->bitmap[y * MAZE_SZ + x], curDarken));
             }
+        }
+    }
+}
+
+
+void drawFOVWeakWall(const Maze *mz, const Asset *asset, const Asset *weakWall){
+    int wallLowerX = weakWall->posX * MAZE_SZ_CELL_PIXEL, 
+        wallUpperX = (weakWall->posX + 1) * MAZE_SZ_CELL_PIXEL,
+        wallLowerY = weakWall->posY * MAZE_SZ_CELL_PIXEL,
+        wallUpperY = (weakWall->posY + 1) * MAZE_SZ_CELL_PIXEL,
+        fovLowerX = asset->posX - currentRadius + asset->height/2,
+        fovUpperX = asset->posX + currentRadius + asset->height/2,
+        fovLowerY = asset->posY - currentRadius + asset->height/2,
+        fovUpperY = asset->posY + currentRadius + asset->height/2;
+    
+    for (int x = fovLowerX; x < fovUpperX; x++) {
+        for (int y = fovLowerY; y < fovUpperY; y++) {
+            if (!(x >= 0 && y >= 0 && x < MAZE_SZ && y < MAZE_SZ)) continue;
+            
+            int dx = x - asset->posX - asset->height/2, 
+                dy = y - asset->posY - asset->height/2;
+            if (!(dx * dx + dy * dy <= currentRadius * currentRadius)) continue;
+            float darkenLevel = (x >= wallLowerX && x < wallUpperX 
+                                && y >= wallLowerY && y < wallUpperY) 
+                                ? (curDarken / darkenFactor) : curDarken;
+            framebf_drawPixel(x, y, darkenPixel(mz->bitmap[y * MAZE_SZ + x], darkenLevel));
         }
     }
 }
 
 
 void removeFOV(const Asset *asset) {
-    for (int y = asset->posY - currentRadius; y <= asset->posY + currentRadius; ++y) {
-        for (int x = asset->posX - currentRadius; x <= asset->posX + currentRadius; ++x) {
-            int dx = x - asset->posX, dy = y - asset->posY;
-            if (dx * dx + dy * dy <= currentRadius * currentRadius) {
-                if (x >= 0 && y >= 0 && x < MAZE_SZ && y < MAZE_SZ) {
-                    framebf_drawPixel(x, y, MENU_BACKGND);
-                }
+    for (int y = asset->posY - currentRadius+asset->height/2; 
+            y <= asset->posY + currentRadius+asset->height/2; ++y) {
+        for (int x = asset->posX - currentRadius+asset->height/2; 
+                x <= asset->posX + currentRadius+asset->height/2; ++x) {
+            int dx = x - asset->posX- asset->height/2, dy = y - asset->posY- asset->height/2;
+            if (x >= 0 && y >= 0 && x < MAZE_SZ && y < MAZE_SZ) {
+                framebf_drawPixel(x,y, MENU_BACKGND);
             }
         }
     }
 }
 
 
-void drawMovement(Maze *maze, Asset *playerAsset, Direction dir, Item *collidedItem){
+void drawMovement(Maze *maze, Asset *playerAsset, Direction dir, ItemMeta *collidedItem){
     // TODO: animation with frame
     int stepOffset = MAZE_SZ_CELL_PIXEL / STEP_AMOUNT;
     int posXFinal = playerAsset->posX + xOffset[dir] * MAZE_SZ_CELL_PIXEL;
@@ -135,19 +151,17 @@ void drawMovement(Maze *maze, Asset *playerAsset, Direction dir, Item *collidedI
                             playerAsset->posY + yOffset[dir] * stepOffset);
         drawFOV(maze, playerAsset);
         drawMoveAnimation(playerAsset, dir, i);
-        wait_msec(250000);
+        wait_msec(125000);
     }
     
     // walk the last step
     removeFOV(playerAsset);
-    if (collidedItem != NULL) {
-        //replace embeded item with background
-        embedAsset(maze, collidedItem->asset, false); 
-    }
+    if (collidedItem != NULL) embedAsset(maze, collidedItem->asset, false);
     updateAssetPos(playerAsset, posXFinal, posYFinal);
     drawFOV(maze, playerAsset);
     drawMoveAnimation(playerAsset, dir, STEP_AMOUNT - 1);
 }
+
 
 void drawMoveAnimation(Asset *playerAsset, Direction dir ,int order){
     switch (dir) {
@@ -197,21 +211,13 @@ void drawMoveAnimation(Asset *playerAsset, Direction dir ,int order){
     drawAsset(playerAsset);
 }
 
+
 void adjustBrightness(const Maze *maze, const Asset *asset, bool darken) {
-    cur_darken = (darken) ? max_f(cur_darken * darken_factor, 0) 
-                        : min_f(cur_darken / darken_factor, 1);
+    curDarken = (darken) ? max_f(curDarken * darkenFactor , 0) 
+                        : min_f(curDarken / darkenFactor , 1);
+    uart_puts("dark level: "); str_debug_float(curDarken);
     drawFOV(maze, asset);
     drawAsset(asset);
-}
-
-
-void resetScreenDarkness() {
-    for (int i = 0; i < MAZE_SZ; i++){
-        for (int j = 0; j < MAZE_SZ; j++){
-            framebf_drawPixel(
-                i, j, darkenPixel(bitmap_maze[i + j * MAZE_SZ], cur_lighten));
-        }
-    }
 }
 
 
@@ -234,6 +240,7 @@ uint64_t darkenPixel(uint64_t color, const float factor) {
     return ((r << 16) | (g << 8) | b);
 }
 
+
 void drawDialog(const char *title, const char *text) {
     uint16_t title_width = font_string_width(str_len(title), FONT_WIDTH);
     uint16_t text_width = font_string_width(str_len(text), FONT_WIDTH);
@@ -241,7 +248,7 @@ void drawDialog(const char *title, const char *text) {
 
     dialog_width = max_l(text_width, esc_msg_width);
 
-    str_debug_num(text_width);
+    // str_debug_num(text_width);
 
     framebf_drawRect(
         GAME_W / 2 - dialog_width / 2 - RECT_BORDER,
@@ -280,25 +287,6 @@ void drawDialog(const char *title, const char *text) {
     );
 }
 
-void removeDialog(const Position *pos) {//replace with maze pixel
-    // TODO: move to storage files
-    Asset maze = {0, 0, MAZE_SZ_CELL * MAZE_SZ_CELL_PIXEL,
-                  MAZE_SZ_CELL * MAZE_SZ_CELL_PIXEL, bitmap_maze};
-
-    uint16_t posX = pos->posX * MAZE_SZ_CELL_PIXEL + (MAZE_SZ_CELL_PIXEL - ITEM_SZ) / 2;
-    uint16_t posY = pos->posY * MAZE_SZ_CELL_PIXEL + (MAZE_SZ_CELL_PIXEL - ITEM_SZ) / 2;
-
-    for (int i = GAME_W / 2 - dialog_width / 2 - RECT_BORDER; i <= GAME_W / 2 + dialog_width / 2 + RECT_BORDER; i++) {
-        for (int j = GAME_H / 2 - DIALOG_HEIGHT / 2; j <= GAME_H / 2 + DIALOG_HEIGHT / 2; j++) {
-            int dx = i - posX, dy = j - posY;
-            if (dx * dx + dy * dy <= currentRadius * currentRadius) {
-                framebf_drawPixel(i, j, maze.bitmap[i + j * maze.width]);
-            } else {
-                framebf_drawPixel(i, j, MENU_BACKGND);
-            }
-        }
-    }
-}
 
 void updateAssetPos(Asset *asset, int x, int y) {
     asset->posX = x;
