@@ -39,12 +39,16 @@ void game_enter() {
     Position playerPos = {0, MAZE_SZ_CELL / 2};
     Player player = {&playerAsset, &playerPos};
     
-    Asset visionAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_vision};
-    Position visionPos = {7, 5};
-    ItemMeta visionMeta = {&visionAsset, &visionPos, VISION, false};
+    Asset visionAsset1 = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_vision};
+    Position visionPos1 = {1,9}; 
+    ItemMeta visionMeta1 = {&visionAsset1, &visionPos1, VISION, false};
+    
+    Asset visionAsset12 = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_vision};
+    Position visionPos12 = {5,1}; 
+    ItemMeta visionMeta12 = {&visionAsset12, &visionPos12, VISION, false};
     
     Maze mz1 = {.level = 1, .pathColor = -1, .bitmap = bitmap_maze1, .bitmapState = bitmap_mazeState1,
-                .itemMetas = {&visionMeta}, .itemMetasSz = 1, 
+                .itemMetas = {&visionMeta1, &visionMeta12}, .itemMetasSz = 2, 
                 .player = &player};
 
     // maze2
@@ -58,7 +62,7 @@ void game_enter() {
 
     // maze 3
     Asset bombAsset3 = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_bomb};
-    Position bombPos3 = {9,1}, bombWall3 = {8,5};
+    Position bombPos3 = {9,1}, bombWall3 = {8,5}; 
     ItemMeta bombMeta3 = {&bombAsset3, &bombPos3, BOMB, false};
     Bomb bomb3 = {&bombMeta3, &bombWall3, false};
     
@@ -70,6 +74,7 @@ void game_enter() {
     Maze mz3 = {.level = 1, .pathColor = -1, .bitmap = bitmap_maze3, .bitmapState = bitmap_mazeState3,
                 .itemMetas = {&bombMeta3}, .itemMetasSz = 1, .bomb = &bomb3,
                 .player = &player};
+                
     Maze *mazes[] = {&mz1, &mz2, &mz3};
     
     // menu
@@ -90,7 +95,7 @@ void game_enter() {
 
         switch (optIdx) {
             case 0: //start
-                game_start(mazes[2-1], &optIdx);
+                game_start(mazes[0], &optIdx);
                 uart_puts("> optIdx:"); uart_dec(optIdx); uart_puts("\n");
                 break;
 
@@ -223,6 +228,7 @@ void game_start(Maze *mz, int *_optIdx){
                 posTmp.posX >= MAZE_SZ_CELL || posTmp.posY >= MAZE_SZ_CELL) continue;
                 
             int mazeState = mz->bitmapState[MAZE_SZ_CELL * posTmp.posY + posTmp.posX];
+            uart_puts("maze state:"); str_debug_num(mazeState);
             if (mazeState == 0) continue;
             
             // post-moving

@@ -264,9 +264,11 @@ void cli_vid() {
     uart_puts("--> cli video!!\n");
     framebf_init(VID_W, VID_H, VID_W, VID_H);
     // play video 3 times
-    for (int frame = 0; frame < epd_bitmap_allArray_LEN; frame++){
-        framebf_drawImg(0,0,VID_W, VID_H, epd_bitmap_allArray[frame]);
-        wait_msec(36250);
+    for (int i = 0 ; i < 2 ; i++) {
+        for (int frame = 0; frame < epd_bitmap_allArray_LEN; frame++){
+            framebf_drawImg(0,0,VID_W, VID_H, epd_bitmap_allArray[frame]);
+            wait_msec(36250);
+        }
     }
 #endif
 }

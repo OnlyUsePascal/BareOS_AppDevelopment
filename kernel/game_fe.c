@@ -32,6 +32,7 @@ void drawMenu(int posX, int posY, int spacing, char *opts[],
     }
 }
 
+
 int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz, 
                 const unsigned int foregnd, const unsigned int backgnd) {
     int actionIdx = 0;
@@ -114,6 +115,7 @@ void drawFOV(const Maze *maze, const Asset *asset) {
 
 
 void drawFOVWeakWall(const Maze *mz, const Asset *asset, const Asset *weakWall){
+    // high light weak wall
     int wallLowerX = weakWall->posX * MAZE_SZ_CELL_PIXEL, 
         wallUpperX = (weakWall->posX + 1) * MAZE_SZ_CELL_PIXEL,
         wallLowerY = weakWall->posY * MAZE_SZ_CELL_PIXEL,
