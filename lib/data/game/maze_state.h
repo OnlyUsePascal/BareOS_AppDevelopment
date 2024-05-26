@@ -20,7 +20,7 @@ const int bitmap_mazeState3[MAZE_SZ_CELL * MAZE_SZ_CELL] = {
 const int bitmap_mazeState2[MAZE_SZ_CELL * MAZE_SZ_CELL] = {
   0,0,0,0,0,0,0,0,0,0,0,
   0,1,1,1,1,1,1,1,0,1,0,
-  0,1,0,0,0,0,0,1,0,1,0,
+  0,1,0,0,0,1,0,1,0,1,0,
   0,1,0,1,1,1,0,1,1,1,0,
   0,1,0,1,0,1,0,0,0,1,0,
   1,1,0,1,0,1,0,1,0,1,1,

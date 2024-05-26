@@ -53,11 +53,21 @@ void game_enter() {
 
     // maze2
     Asset visionAsset2 = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_vision};
-    Position visionPos2 = {1, 8};
+    Position visionPos2 = {9, 7};
     ItemMeta visionMeta2 = {&visionAsset2, &visionPos2, VISION, false};
     
+    Asset visionAsset22 = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_vision};
+    Position visionPos22 = {9, 1};
+    ItemMeta visionMeta22 = {&visionAsset22, &visionPos22, VISION, false};
+    
+    Asset portalAsset2 = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_portal};
+    Position portalPos2 = {3, 5}, portalDes2 = {5,9};
+    ItemMeta portalMeta2 = {&portalAsset2, &portalPos2, PORTAL, false};
+    Portal portal2 = {&portalMeta2, &portalDes2};
+    
     Maze mz2 = {.level = 1, .pathColor = -1, .bitmap = bitmap_maze2, .bitmapState = bitmap_mazeState2,
-                .itemMetas = {&visionMeta2}, .itemMetasSz = 1, 
+                .itemMetas = {&visionMeta2, &visionMeta22, &portalMeta2}, .itemMetasSz = 3, 
+                .portal = &portal2,
                 .player = &player};
 
     // maze 3
@@ -65,11 +75,6 @@ void game_enter() {
     Position bombPos3 = {9,1}, bombWall3 = {8,5}; 
     ItemMeta bombMeta3 = {&bombAsset3, &bombPos3, BOMB, false};
     Bomb bomb3 = {&bombMeta3, &bombWall3, false};
-    
-    // Asset portalAsset3 = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_portal};
-    // Position portalPos3 = {2, 5}, portalDes3 = {4,5};
-    // ItemMeta portalMeta3 = {&portalAsset3, &portalPos3, PORTAL, false};
-    // Portal portal3 = {&portalMeta3, &portalDes3};
     
     Maze mz3 = {.level = 1, .pathColor = -1, .bitmap = bitmap_maze3, .bitmapState = bitmap_mazeState3,
                 .itemMetas = {&bombMeta3}, .itemMetasSz = 1, .bomb = &bomb3,
@@ -95,7 +100,7 @@ void game_enter() {
 
         switch (optIdx) {
             case 0: //start
-                game_start(mazes[0], &optIdx);
+                game_start(mazes[1], &optIdx);
                 uart_puts("> optIdx:"); uart_dec(optIdx); uart_puts("\n");
                 break;
 
