@@ -11,8 +11,8 @@
 #define STEP_AMOUNT 3
 #define RECT_BORDER 10
 #define DIALOG_HEIGHT 90
-#define DIALOG_EXIT_MSG "Press Enter to continue"
-#define DIALOG_EXIT_MSG_SIZE 23
+#define DIALOG_EXIT_MSG "Press Enter to continue..."
+#define DIALOG_EXIT_MSG_SIZE 26
 
 float curDarken = 1.0f; 
 const float darkenFactor = 0.64f; 
@@ -287,6 +287,88 @@ void drawDialog(const char *title, const char *text) {
     );
 }
 
+unsigned char getComponent(uint32_t color, int position) {
+    return (color >> position) & 0x3;
+}
+
+uint32_t interpolateColor(uint32_t startColor, uint32_t endColor, int currentStep, int totalSteps) {
+    float t = (float)currentStep / totalSteps;
+
+    unsigned char startR = getComponent(startColor, 4);
+    unsigned char startG = getComponent(startColor, 2);
+    unsigned char startB = getComponent(startColor, 0);
+
+    unsigned char endR = getComponent(endColor, 4);
+    unsigned char endG = getComponent(endColor, 2);
+    unsigned char endB = getComponent(endColor, 0);
+
+    unsigned char currentR = (unsigned char)((1 - t) * startR + t * endR);
+    unsigned char currentG = (unsigned char)((1 - t) * startG + t * endG);
+    unsigned char currentB = (unsigned char)((1 - t) * startB + t * endB);
+
+    uint32_t currentColor = (currentR << 4) | (currentG << 2) | currentB;
+    return currentColor;
+}
+
+void drawLevelTransitionText(const uint8_t levelNum) {
+    uint64_t color = 0xE7E1DA;
+    if (levelNum != 3) {
+        uint16_t msg_level_width = font_string_width(6, FONT_WIDTH);
+        uint16_t msg_number_width = font_string_width(1, FONT_WIDTH);
+        uint16_t full_msg_width = font_string_width(16, FONT_WIDTH);
+        uint16_t esc_msg_width = font_string_width(str_len(DIALOG_EXIT_MSG), FONT_WIDTH);
+
+        char levelLabel[2];
+        levelLabel[0] = levelNum + '0';
+        levelLabel[1] = '\0';
+
+        font_drawString(
+                GAME_W / 2 - full_msg_width / 2,
+                GAME_H / 2 - DIALOG_HEIGHT / 2,
+                "Level ",
+                color,
+                2,
+                1
+        );
+
+        font_drawString(
+                GAME_W / 2 - full_msg_width / 2 + msg_level_width,
+                GAME_H / 2 - DIALOG_HEIGHT / 2,
+                levelLabel,
+                color,
+                2,
+                1
+        );
+
+        font_drawString(
+                GAME_W / 2 - full_msg_width / 2 + msg_level_width + msg_number_width,
+                GAME_H / 2 - DIALOG_HEIGHT / 2,
+                " cleared!",
+                color,
+                2,
+                1
+        );
+
+        font_drawString(
+                GAME_W / 2 - esc_msg_width / 2,
+                GAME_H / 2 + DIALOG_HEIGHT / 2,
+                DIALOG_EXIT_MSG,
+                color,
+                2,
+                1
+        );
+    } else {
+        uint16_t msg_level_width = font_string_width(8, FONT_WIDTH);
+        font_drawString(
+                GAME_W / 2 - msg_level_width / 2,
+                GAME_H / 2 - DIALOG_HEIGHT / 2,
+                "You win!",
+                color,
+                2,
+                1
+        );
+    }
+}
 
 void updateAssetPos(Asset *asset, int x, int y) {
     asset->posX = x;

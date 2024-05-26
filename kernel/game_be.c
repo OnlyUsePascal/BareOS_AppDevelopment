@@ -70,6 +70,7 @@ void game_enter() {
     Maze mz3 = {};
 
     Maze *mazes[] = {&mz1, &mz2, &mz3};
+
     
     // menu
     int menuPosX = 220, menuPosY = 250, yOffset = 50;
@@ -89,9 +90,13 @@ void game_enter() {
         }
 
         switch (optIdx) {
-            case 0: //start
-                game_start(mazes[1], &optIdx);
+            case 0: {
+                for (int i = 0; i < 3; i++) {
+                    game_start(mazes[i], &optIdx, i);
+                }
+
                 break;
+            }
 
             case 1: //continue
                 optIdx = -1;
@@ -129,7 +134,7 @@ int game_menu_enter() {
 }
 
 
-void game_start(Maze *mz, int *_optIdx){
+void game_start(Maze *mz, int *_optIdx, const uint8_t mazeIdx){
     uart_puts("Starting Game...\n");
     bool isFOVShown = true;
     Player *pl = mz->player;
@@ -227,7 +232,18 @@ void game_start(Maze *mz, int *_optIdx){
             update_pos(pl->pos, dir);
             ItemMeta *collidedItem = detect_collision(*(pl->pos), mz->itemMetas, mz->itemMetasSz);
             drawMovement(mz, pl->asset, dir, collidedItem);
-            
+
+            // detect end of maze
+            if (pl->pos->posX % MAZE_SZ_CELL == MAZE_SZ_CELL - 1) {
+                str_debug("end of maze reached");
+                drawLevelTransitionText(mazeIdx + 1);
+
+                char c = 0;
+                while ((c = uart_getc()) != '\n') {}
+
+                return;
+            }
+
             // darken screen interval
             pl->step += 1; 
             if (pl->step % 3 == 0) {

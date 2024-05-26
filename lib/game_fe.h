@@ -46,6 +46,8 @@ void getMazePathColor(Maze *maze);
 void adjustBrightness(const Maze *maze, const Asset *asset, bool darken);
 uint64_t darkenPixel(uint64_t color, const float factor);
 
+void drawLevelTransitionText(const uint8_t levelNum);
+
 extern float curDarken;
 extern const float darkenFactor;
 
