@@ -66,8 +66,7 @@ void game_enter() {
     Portal portal2 = {&portalMeta2, &portalDes2};
     
     Maze mz2 = {.level = 1, .pathColor = -1, .bitmap = bitmap_maze2, .bitmapState = bitmap_mazeState2,
-                .itemMetas = {&visionMeta2, &visionMeta22, &portalMeta2}, .itemMetasSz = 3, 
-                .portal = &portal2,
+                .itemMetas = {&visionMeta2, &visionMeta22, &portalMeta2}, .itemMetasSz = 3, .portal = &portal2,
                 .player = &player};
 
     // maze 3
@@ -76,11 +75,22 @@ void game_enter() {
     ItemMeta bombMeta3 = {&bombAsset3, &bombPos3, BOMB, false};
     Bomb bomb3 = {&bombMeta3, &bombWall3, false};
     
+    Asset visionAsset3 = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_vision};
+    Position visionPos3 = {9, 7};
+    ItemMeta visionMeta3 = {&visionAsset3, &visionPos3, VISION, false};
+    
+    Asset portalAsset3 = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_portal};
+    Position portalPos3 = {3, 5}, portalDes3 = {3,9};
+    ItemMeta portalMeta3 = {&portalAsset3, &portalPos3, PORTAL, false};
+    Portal portal3 = {&portalMeta3, &portalDes3};
+
     Maze mz3 = {.level = 1, .pathColor = -1, .bitmap = bitmap_maze3, .bitmapState = bitmap_mazeState3,
-                .itemMetas = {&bombMeta3}, .itemMetasSz = 1, .bomb = &bomb3,
+                .itemMetas = {&bombMeta3, &visionMeta3, &portalMeta3}, .itemMetasSz = 3, 
+                .bomb = &bomb3, .portal = &portal3,
                 .player = &player};
                 
     Maze *mazes[] = {&mz1, &mz2, &mz3};
+    
     
     // menu
     int menuPosX = 220, menuPosY = 250, yOffset = 50;
@@ -100,7 +110,7 @@ void game_enter() {
 
         switch (optIdx) {
             case 0: //start
-                game_start(mazes[1], &optIdx);
+                game_start(mazes[3-1], &optIdx);
                 uart_puts("> optIdx:"); uart_dec(optIdx); uart_puts("\n");
                 break;
 

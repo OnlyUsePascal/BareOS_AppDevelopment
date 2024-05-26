@@ -20,7 +20,7 @@
 #define LIGHT_THRESHOLD 0.05
 #define LIGHT_RADIUS 60
 #define PLAYER_SZ 30
-#define ITEM_SZ 20
+#define ITEM_SZ 30
 
 
 void clearScreen();
