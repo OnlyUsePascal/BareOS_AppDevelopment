@@ -4,13 +4,14 @@
 #include "../lib/framebf.h"
 #include "../lib/def.h"
 #include "../lib/utils.h"
-// #include "../lib/util_str.h"
+#include "../lib/font.h"
 #include "../lib/data/game/game_menu.h"
 #include "../lib/data/game/maze.h"
 #include "../lib/data/game/maze_state.h"
 #include "../lib/data/game/player.h"
 #include "../lib/data/game/item.h"
 #include "../lib/data/data_menu_background.h"
+#include "../lib/data/help_dialog.h"
 
 
 // ===== BACK-END =====
@@ -19,7 +20,12 @@ const int yOffset[] = {-1, 0, 1, 0};
 const int xOffset[] = {0, -1, 0, 1};
 uint16_t currentRadius = 40;
 
-
+void render_scene(const Maze *maze, const Asset *asset, const bool isFOVShown);
+void debug_pos(Position pos);
+void update_pos(Position *des, Direction dir);
+void handle_collision(ItemMeta *item, Maze *maze, Player *player);
+int cmp_pos(Position pos1, Position pos2);
+void debug_item(ItemMeta item);
 
 void game_enter() {
     // init
@@ -40,7 +46,7 @@ void game_enter() {
     Maze mz1 = {.level = 1, .pathColor = -1, .bitmap = bitmap_maze1, .bitmapState = bitmap_mazeState1,
                 .itemMetas = {&visionMeta}, .itemMetasSz = 1, 
                 .player = &player};
-    
+
     // maze2
     Asset bombAsset2 = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_bomb};
     Position bombPos2 = {1,4}, bombWall2 = {6,7};
@@ -62,21 +68,24 @@ void game_enter() {
     ItemMeta portalMeta = {&portalAsset, &portalPos, PORTAL, false};
     Portal portal = {&portalMeta, &portalDes};
     Maze mz3 = {};
-    
+
     Maze *mazes[] = {&mz1, &mz2, &mz3};
-    
     
     // menu
     int menuPosX = 220, menuPosY = 250, yOffset = 50;
-    char *opts[] = {"Start", "Continue", "How To Play?", "Exit"};
+    char *opts[] = {"Start", "Choose Level", "How To Play?", "Exit"};
     int optSz = sizeof(opts) / sizeof(opts[0]);
+// <<<<<<< HEAD
     
     int optIdx = -1;
     while (1) {
         if (optIdx == -1) {
-            drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
+            drawMenu(menuPosX, menuPosY, yOffset, opts, 
+                        optSz, MENU_FOREGND, MENU_BACKGND, true);
             optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, 
                                 optSz, MENU_FOREGND, MENU_BACKGND);
+            drawMenu(menuPosX, menuPosY, yOffset, opts, 
+                        optSz, MENU_FOREGND, MENU_BACKGND, false);
         }
 
         switch (optIdx) {
@@ -85,14 +94,17 @@ void game_enter() {
                 break;
 
             case 1: //continue
+                optIdx = -1;
                 game_continue();
                 break;
 
             case 2: //help
+                optIdx = -1;
                 game_help();
                 break;
 
             case 3: //exit
+                optIdx = -1;
                 game_exit();
                 return;
         }
@@ -110,7 +122,8 @@ int game_menu_enter() {
     char *opts[] = {"Continue", "Exit to menu"};
     int optSz = sizeof(opts) / sizeof(opts[0]);
 
-    drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
+    drawMenu(menuPosX, menuPosY, yOffset, opts, 
+                        optSz, MENU_FOREGND, MENU_BACKGND, true);
     return getMenuOpt(menuPosX - 50, menuPosY, yOffset, 
                         optSz, MENU_FOREGND, GAME_MENU_BACKGND);
 }
@@ -230,7 +243,8 @@ void game_start(Maze *mz, int *_optIdx){
                     char *opts[] = {"Start Over", "Rage Quit ?"};
                     int optSz = sizeof(opts) / sizeof(opts[0]);
 
-                    drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
+                    drawMenu(menuPosX, menuPosY, yOffset, opts, 
+                                optSz, MENU_FOREGND, MENU_BACKGND, true);
                     int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, 
                                             optSz, MENU_FOREGND, MENU_BACKGND);
 
@@ -257,12 +271,59 @@ void game_start(Maze *mz, int *_optIdx){
 
 
 void game_continue() {
-    uart_puts("Continueing Game...\n");
+    int menuPosX = 220, menuPosY = 250, yOffset = 50;
+    char *opts[] = {"Level 1", "Level 2", "Level 3", "Back to Menu"};
+    int optSz = sizeof(opts) / sizeof(opts[0]);
+    drawMenu(menuPosX, menuPosY, yOffset, opts, 
+                optSz, MENU_FOREGND, MENU_BACKGND, true);
+
+    while (1) {
+        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, optSz, MENU_FOREGND, MENU_BACKGND);
+        font_drawChar(menuPosX - 50, menuPosY + optIdx * yOffset, '>', MENU_BACKGND, 2, 1);
+
+        switch (optIdx) {
+            case 0:
+                uart_puts("level 1\n");
+                break;
+
+            case 1:
+                uart_puts("level 2\n");
+                break;
+
+            case 2:
+                uart_puts("level 3\n");
+                break;
+
+            case 3: // back to menu
+                drawMenu(menuPosX, menuPosY, yOffset, opts, 
+                            optSz, MENU_FOREGND, MENU_BACKGND, false);
+                return;
+        }
+    }
 }
 
 
 void game_help() {
     uart_puts("Game Instruction...\n");
+
+    Asset dialog = {
+        GAME_W / 2 - HELP_DIALOG_WIDTH / 2,
+        GAME_H / 2 - HELP_DIALOG_HEIGHT / 2,
+        HELP_DIALOG_WIDTH,
+        HELP_DIALOG_HEIGHT,
+        bitmap_help_dialog
+    };
+
+    drawAsset(&dialog);
+
+    char c = 0;
+    while ((c = uart_getc()) != '\n') {}
+
+    for (int i = GAME_W / 2 - HELP_DIALOG_WIDTH / 2, posX = 0; posX < HELP_DIALOG_WIDTH; i++, posX++) {
+        for (int j = GAME_H / 2 - HELP_DIALOG_HEIGHT / 2, posY = 0; posY < HELP_DIALOG_HEIGHT; j++, posY++) {
+            framebf_drawPixel(i, j, bitmap_menu_background[i + j * MENU_BACKGROUND_SIZE]);
+        }
+    }
 }
 
 
