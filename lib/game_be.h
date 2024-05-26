@@ -27,14 +27,12 @@ typedef enum {
   PORTAL,
 } ItemId;
 
-// TODO: be more specific
 typedef struct {
   Asset *asset;
   Position *pos;
   ItemId id;
-  int collided;
+  bool collided;
 } ItemMeta;
-
 
 typedef struct {
   // inherit ItemMeta
@@ -51,6 +49,7 @@ typedef struct {
 typedef struct {
   Asset *asset;
   Position *pos;
+  uint32_t step;
 } Player;
 
 
@@ -81,7 +80,7 @@ extern uint16_t currentRadius;
 
 void game_enter();
 int game_menu_enter();
-void game_start(Maze *mz);
+void game_start(Maze *mz, int *_optIdx);
 void game_continue();
 void game_help();
 void game_exit();

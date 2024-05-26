@@ -14,7 +14,7 @@
 #define DIALOG_EXIT_MSG_SIZE 23
 
 float curDarken = 1.0f; 
-const float darkenFactor = 0.8f; 
+const float darkenFactor = 0.64f; 
 static uint16_t dialog_width = 0;
 
 
@@ -208,8 +208,9 @@ void drawMoveAnimation(Asset *playerAsset, Direction dir ,int order){
 
 
 void adjustBrightness(const Maze *maze, const Asset *asset, bool darken) {
-    curDarken = (darken) ? max_f(curDarken * darkenFactor, 0) 
-                        : min_f(curDarken / darkenFactor, 1);
+    curDarken = (darken) ? max_f(curDarken * darkenFactor , 0) 
+                        : min_f(curDarken / darkenFactor , 1);
+    uart_puts("dark level: "); str_debug_float(curDarken);
     drawFOV(maze, asset);
     drawAsset(asset);
 }

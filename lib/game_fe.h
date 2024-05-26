@@ -15,7 +15,7 @@
 #define GAME_MENU_SZ_W 350
 #define GAME_MENU_SZ_H 271
 #define ASSET_HIDDEN -1
-
+#define LIGHT_THRESHOLD 0.05
 #define MAZE_SZ_CELL_PIXEL 40 
 #define PLAYER_SZ 30
 #define ITEM_SZ 20

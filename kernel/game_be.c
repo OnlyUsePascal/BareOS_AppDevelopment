@@ -33,50 +33,55 @@ void game_enter() {
     Position playerPos = {0, MAZE_SZ_CELL / 2};
     Player player = {&playerAsset, &playerPos};
     
-    Asset bombAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_bomb};
-    Position bombPos = {1, 9}, bombWall = {2,8};
-    ItemMeta bombMeta = {&bombAsset, &bombPos, BOMB, 0};
-    Bomb bomb = {&bombMeta, &bombWall, false};
-    
     Asset visionAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_vision};
     Position visionPos = {7, 5};
-    ItemMeta visionMeta = {&visionAsset, &visionPos, VISION, 0};
-    
-    Asset portalAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_portal};
-    Position portalPos = {2, 5}, portalDes = {4,5};
-    ItemMeta portalMeta = {&portalAsset, &portalPos, PORTAL, 0};
-    Portal portal = {&portalMeta, &portalDes};
+    ItemMeta visionMeta = {&visionAsset, &visionPos, VISION, false};
     
     Maze mz1 = {.level = 1, .pathColor = -1, .bitmap = bitmap_maze1, .bitmapState = bitmap_mazeState1,
-                .itemMetas = {&bombMeta, &visionMeta, &portalMeta}, .itemMetasSz = 3, 
-                .portal = &portal, .bomb = &bomb,
+                .itemMetas = {&visionMeta}, .itemMetasSz = 1, 
                 .player = &player};
     
     // maze2
-    Maze mz2 = {};
+    Asset bombAsset2 = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_bomb};
+    Position bombPos2 = {1,4}, bombWall2 = {6,7};
+    ItemMeta bombMeta2 = {&bombAsset2, &bombPos2, BOMB, false};
+    Bomb bomb2 = {&bombMeta2, &bombWall2, false};
+    
+    Asset visionAsset2 = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_vision};
+    Position visionPos2 = {3, 8};
+    ItemMeta visionMeta2 = {&visionAsset2, &visionPos2, VISION, false};
+    
+    Maze mz2 = {.level = 1, .pathColor = -1, .bitmap = bitmap_maze2, .bitmapState = bitmap_mazeState2,
+                .itemMetas = {&bombMeta2, &visionMeta2}, .itemMetasSz = 2, 
+                .bomb = &bomb2,
+                .player = &player};
+
+    // maze 3
+    Asset portalAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_portal};
+    Position portalPos = {2, 5}, portalDes = {4,5};
+    ItemMeta portalMeta = {&portalAsset, &portalPos, PORTAL, false};
+    Portal portal = {&portalMeta, &portalDes};
     Maze mz3 = {};
     
     Maze *mazes[] = {&mz1, &mz2, &mz3};
-    
-    
-    
-    
-    
     
     
     // menu
     int menuPosX = 220, menuPosY = 250, yOffset = 50;
     char *opts[] = {"Start", "Continue", "How To Play?", "Exit"};
     int optSz = sizeof(opts) / sizeof(opts[0]);
-
+    
+    int optIdx = -1;
     while (1) {
-        drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
-        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, 
+        if (optIdx == -1) {
+            drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
+            optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, 
                                 optSz, MENU_FOREGND, MENU_BACKGND);
+        }
 
         switch (optIdx) {
             case 0: //start
-                game_start(mazes[0]);
+                game_start(mazes[1], &optIdx);
                 break;
 
             case 1: //continue
@@ -97,8 +102,6 @@ void game_enter() {
 
 
 int game_menu_enter() {
-    // init
-    framebf_init(GAME_W, GAME_H, GAME_W, GAME_H);
     framebf_drawImg(115, 130, GAME_MENU_SZ_W, 
                     GAME_MENU_SZ_H, bitmap_game_menu);
 
@@ -107,39 +110,49 @@ int game_menu_enter() {
     char *opts[] = {"Continue", "Exit to menu"};
     int optSz = sizeof(opts) / sizeof(opts[0]);
 
-    while (1) {
-        drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
-        int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, 
-                                optSz, MENU_FOREGND, GAME_MENU_BACKGND);
-
-        switch (optIdx) {
-            case 0: //start
-                return 0;
-                break;
-
-            case 1: //exit to menu
-                return 1;
-                break;
-        }
-    }
+    drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
+    return getMenuOpt(menuPosX - 50, menuPosY, yOffset, 
+                        optSz, MENU_FOREGND, GAME_MENU_BACKGND);
 }
 
 
-void game_start(Maze *mz){
+void game_start(Maze *mz, int *_optIdx){
     uart_puts("Starting Game...\n");
     bool isFOVShown = true;
     Player *pl = mz->player;
-    getMazePathColor(mz);
+    *_optIdx = -1;
     
+    // rseset maze
+    pl->pos->posX = 0; pl->pos->posY = MAZE_SZ_CELL / 2;
+    pl->step = 0;
+    curDarken = 1;
+    getMazePathColor(mz);
+    // TODO: reset item status
+    for (int i = 0 ; i < mz->itemMetasSz; i++){
+        ItemMeta *meta = mz->itemMetas[i];
+        meta->collided = false; 
+        
+        switch (meta->id) {
+            case BOMB:
+                mz->bomb->used = false;
+                // TODO: reset bomb weak wall ?
+                // use copy of map to restore broken wall ?
+                break;
+            default:
+                break;
+        }
+    }
+
+    // init maze front end
     posBeToFe(pl->pos, pl->asset);
     for (int i = 0 ; i < mz->itemMetasSz; i++){
-        ItemMeta *itemMeta = mz->itemMetas[i];        
-        posBeToFe(itemMeta->pos, itemMeta->asset);
-        if(!(itemMeta->collided)) embedAsset(mz, itemMeta->asset, true);
+        ItemMeta *meta = mz->itemMetas[i];        
+        posBeToFe(meta->pos, meta->asset);
+        embedAsset(mz, meta->asset, true);
     }
-    
     render_scene(mz, pl->asset, isFOVShown);
-    // TODO: paint breakable wall
+    // TODO: paint breakable wall !!!
+    
     
     // movement 
     while (1) {
@@ -161,14 +174,14 @@ void game_start(Maze *mz){
         else if (c == 27) { // game menu
             int game_stage = game_menu_enter();   
             switch (game_stage) {
-            case 0:
-                render_scene(mz, pl->asset, isFOVShown);
-                break;
-            case 1:
-                clearScreen();
-                framebf_drawImg(0, 0, MENU_BACKGROUND_SIZE, 
-                                MENU_BACKGROUND_SIZE, bitmap_menu_background);
-                return;
+                case 0:
+                    render_scene(mz, pl->asset, isFOVShown);
+                    break;
+                case 1:
+                    clearScreen();
+                    framebf_drawImg(0, 0, MENU_BACKGROUND_SIZE, 
+                                    MENU_BACKGROUND_SIZE, bitmap_menu_background);
+                    return;
             }
             // str_debug_num(game_stage);
         }
@@ -187,7 +200,7 @@ void game_start(Maze *mz){
             drawFOV(mz, pl->asset);
             drawMoveAnimation(pl->asset, dir, 2);
             
-            // moving
+            // update position
             Position posTmp = {pl->pos->posX, pl->pos->posY};
             update_pos(&posTmp, dir); uart_puts("-> "); debug_pos(posTmp);
             if (posTmp.posX < 0 || posTmp.posY < 0 || 
@@ -195,18 +208,52 @@ void game_start(Maze *mz){
                 
             int mazeState = mz->bitmapState[MAZE_SZ_CELL * posTmp.posY + posTmp.posX];
             str_debug_num(mazeState);
-            if (mazeState == 0) {
-                str_debug("hit wall!"); continue;
-            } 
+            if (mazeState == 0) continue;
             
             // post-moving
             update_pos(pl->pos, dir);
             ItemMeta *collidedItem = detect_collision(*(pl->pos), mz->itemMetas, mz->itemMetasSz);
             drawMovement(mz, pl->asset, dir, collidedItem);
+            
+            // darken screen interval
+            pl->step += 1; 
+            if (pl->step % 3 == 0) {
+                adjustBrightness(mz, pl->asset, true);
+                if (curDarken <= LIGHT_THRESHOLD) {
+                    str_debug("game over :(");
+                    wait_msec(1000000);
+                    clearScreen();
+                    
+                    
+                    font_drawString(150, 150, "Game Over :(", MENU_FOREGND, 2, 1);
+                    int menuPosX = 220, menuPosY = 250, yOffset = 50;
+                    char *opts[] = {"Start Over", "Rage Quit ?"};
+                    int optSz = sizeof(opts) / sizeof(opts[0]);
+
+                    drawMenu(menuPosX, menuPosY, yOffset, opts, optSz);
+                    int optIdx = getMenuOpt(menuPosX - 50, menuPosY, yOffset, 
+                                            optSz, MENU_FOREGND, MENU_BACKGND);
+
+                    switch (optIdx) {
+                        case 0: //start over
+                            // TODO: start over mechanic ?
+                            *_optIdx = 0;
+                            clearScreen();
+                            return;
+                        case 1: //quit
+                            clearScreen();
+                            framebf_drawImg(0, 0, MENU_BACKGROUND_SIZE, 
+                                            MENU_BACKGROUND_SIZE, bitmap_menu_background);
+                            return;
+                    }
+                }
+            }
+            
             handle_collision(collidedItem, mz, pl);
         }
     } 
 }
+
 
 
 void game_continue() {
