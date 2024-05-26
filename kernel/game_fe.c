@@ -6,6 +6,7 @@
 #include "../lib/data/game/maze.h"
 #include "../lib/data/data_font.h"
 #include "../lib/data/game/player_movement.h"
+#include "../lib/font.h"
 
 #define STEP_AMOUNT 3
 #define RECT_BORDER 10
@@ -14,7 +15,7 @@
 #define DIALOG_EXIT_MSG_SIZE 23
 
 float curDarken = 1.0f; 
-const float darkenFactor = 0.8f; 
+const float darkenFactor = 0.64f; 
 static uint16_t dialog_width = 0;
 
 
@@ -23,34 +24,38 @@ void clearScreen(){
 }
 
 
-void drawMenu(int posX, int posY, int spacing, char *opts[], int optSz){
+void drawMenu(int posX, int posY, int spacing, char *opts[], 
+                int optSz, uint32_t foreGnd, uint32_t backGnd, bool fill){
     for (int i = 0; i < optSz; i++){
-        font_drawString(posX, posY + i * spacing, opts[i], MENU_FOREGND, 2, 1);
+        font_drawString(posX, posY + i * spacing, 
+                        opts[i], (fill) ? foreGnd : backGnd, 2, 1);
     }
 }
 
-
-int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz, const unsigned int foregnd, const unsigned int backgnd) {
+int getMenuOpt(int markPosX, int markPosY, int yOffset, int optSz, 
+                const unsigned int foregnd, const unsigned int backgnd) {
     int actionIdx = 0;
-    font_drawChar(markPosX, markPosY, '>', foregnd, 2);
+    font_drawChar(markPosX, markPosY, '>', foregnd, 2, 1);
 
     while (1) {
         char c = uart_getc();
-        uart_sendc(c);
-        uart_sendc('\n');
+        uart_sendc(c); uart_sendc('\n');
         if (c == 'w' || c == 'a') {
-            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', backgnd, 2);
+            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', backgnd, 2, 1);
             actionIdx = (actionIdx - 1) % optSz;
             if (actionIdx < 0) actionIdx += optSz;
-            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', foregnd, 2);
+            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', foregnd, 2, 1);
         } else if (c == 's' || c == 'd') {
-            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', backgnd, 2);
+            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', backgnd, 2, 1);
             actionIdx = (actionIdx + 1) % optSz;
-            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', foregnd, 2);
+            font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', foregnd, 2, 1);
         } else if (c == '\n') {
             break;
         }
     }
+    
+    // remove selector
+    font_drawChar(markPosX, markPosY + actionIdx * yOffset, '>', backgnd, 2, 1);
     return actionIdx;
 }
 
@@ -208,8 +213,9 @@ void drawMoveAnimation(Asset *playerAsset, Direction dir ,int order){
 
 
 void adjustBrightness(const Maze *maze, const Asset *asset, bool darken) {
-    curDarken = (darken) ? max_f(curDarken * darkenFactor, 0) 
-                        : min_f(curDarken / darkenFactor, 1);
+    curDarken = (darken) ? max_f(curDarken * darkenFactor , 0) 
+                        : min_f(curDarken / darkenFactor , 1);
+    uart_puts("dark level: "); str_debug_float(curDarken);
     drawFOV(maze, asset);
     drawAsset(asset);
 }
