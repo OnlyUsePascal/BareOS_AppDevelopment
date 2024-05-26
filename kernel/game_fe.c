@@ -70,20 +70,31 @@ void drawAsset(const Asset *asset) {
 }
 
 
-// void drawAssetPartial(const Asset *asset, int centerX, int centerY) {
+void drawAssetPartial(const ItemMeta *item, const Asset *pl) {
+    Asset *asset = item->asset;
+    int fovLowerX = pl->posX - currentRadius + pl->height/2,
+        fovUpperX = pl->posX + currentRadius + pl->height/2,
+        fovLowerY = pl->posY - currentRadius + pl->height/2,
+        fovUpperY = pl->posY + currentRadius + pl->height/2,
+        itemLowerX = asset->posX,
+        itemUpperX = asset->posX + asset->width,
+        itemLowerY = asset->posY,
+        itemUpperY = asset->posY + asset->height;
     
-// }
-
-
-void embedAsset(const Maze *maze, const Asset *asset, bool fill){
+    // skip collided or out-range item
+    if (item->collided || !(max_l(fovLowerX, itemLowerX) <= min_l(fovUpperX, itemUpperX) 
+                            && max_l(fovLowerY, itemLowerY) <= min_l(fovUpperY, itemUpperY))) 
+                            return;
+    
     for (int i = asset->posX, posX = 0; posX < asset->width; i++, posX++) {
         for (int j = asset->posY, posY = 0; posY < asset->height; j++, posY++) {
+            int dx = i - pl->posX - pl->height/2, 
+                dy = j - pl->posY - pl->height/2;
+            if (!(dx * dx + dy * dy <= currentRadius * currentRadius)) continue;
             if (asset->bitmap[posX + posY * asset->width] != 0)
-                maze->bitmap[i + j * MAZE_SZ] = (fill) ? 
-                                                asset->bitmap[posX + posY * asset->width] 
-                                                : maze->pathColor;
+                framebf_drawPixel(i, j, asset->bitmap[posX + posY * asset->width]);
         }
-    }
+    }   
 }
 
 
@@ -142,33 +153,40 @@ void removeFOV(const Asset *asset) {
 }
 
 
-void drawMovement(Maze *maze, Asset *playerAsset, Direction dir, ItemMeta *collidedItem){
-    // TODO: animation with frame
+void drawMovement(Maze *mz, Asset *plAsset, Direction dir, ItemMeta *collidedItem){
     int stepOffset = MAZE_SZ_CELL_PIXEL / STEP_AMOUNT;
-    int posXFinal = playerAsset->posX + xOffset[dir] * MAZE_SZ_CELL_PIXEL;
-    int posYFinal = playerAsset->posY + yOffset[dir] * MAZE_SZ_CELL_PIXEL;
+    int posXFinal = plAsset->posX + xOffset[dir] * MAZE_SZ_CELL_PIXEL;
+    int posYFinal = plAsset->posY + yOffset[dir] * MAZE_SZ_CELL_PIXEL;
     
     // walk the middle
     for (int i = 0 ; i < STEP_AMOUNT - 1; i++){
         // removeAsset(playerAsset);
-        removeFOV(playerAsset);
-        updateAssetPos(playerAsset, playerAsset->posX + xOffset[dir] * stepOffset, 
-                            playerAsset->posY + yOffset[dir] * stepOffset);
-        drawFOV(maze, playerAsset);
-        drawMoveAnimation(playerAsset, dir, i);
+        removeFOV(plAsset);
+        updateAssetPos(plAsset, plAsset->posX + xOffset[dir] * stepOffset, 
+                            plAsset->posY + yOffset[dir] * stepOffset);
+        drawFOV(mz, plAsset);
+        for (int i = 0 ; i < mz->itemMetasSz; i++){
+            ItemMeta *item = mz->itemMetas[i];
+            drawAssetPartial(item, plAsset);
+        }
+        drawMovementFrame(plAsset, dir, i);
         wait_msec(125000);
     }
     
     // walk the last step
-    removeFOV(playerAsset);
-    if (collidedItem != NULL) embedAsset(maze, collidedItem->asset, false);
-    updateAssetPos(playerAsset, posXFinal, posYFinal);
-    drawFOV(maze, playerAsset);
-    drawMoveAnimation(playerAsset, dir, STEP_AMOUNT - 1);
+    removeFOV(plAsset);
+    updateAssetPos(plAsset, posXFinal, posYFinal);
+    drawFOV(mz, plAsset);
+    // still draw item asset, but if collidediTem = curItem then dont draw
+    for (int i = 0 ; i < mz->itemMetasSz; i++){
+        ItemMeta *item = mz->itemMetas[i];
+        if (item != collidedItem) drawAssetPartial(item, plAsset);
+    }
+    drawMovementFrame(plAsset, dir, STEP_AMOUNT - 1);
 }
 
 
-void drawMoveAnimation(Asset *playerAsset, Direction dir ,int order){
+void drawMovementFrame(Asset *playerAsset, Direction dir ,int order){
     switch (dir) {
     case RIGHT:
         if(order == 0){
@@ -217,12 +235,16 @@ void drawMoveAnimation(Asset *playerAsset, Direction dir ,int order){
 }
 
 
-void adjustBrightness(const Maze *maze, const Asset *asset, bool darken) {
+void adjustBrightness(const Maze *mz, const Asset *plAsset, bool darken) {
     curDarken = (darken) ? max_f(curDarken * darkenFactor , 0) 
                         : min_f(curDarken / darkenFactor , 1);
     uart_puts("dark level: "); str_debug_float(curDarken);
-    drawFOV(maze, asset);
-    drawAsset(asset);
+    drawFOV(mz, plAsset);
+    for (int i = 0 ; i < mz->itemMetasSz; i++){
+        ItemMeta *item = mz->itemMetas[i];
+        drawAssetPartial(item, plAsset);
+    }
+    drawAsset(plAsset);
 }
 
 

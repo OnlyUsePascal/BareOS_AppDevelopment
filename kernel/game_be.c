@@ -48,9 +48,8 @@ void game_enter() {
                 .player = &player};
 
     // maze2
-    
     Asset visionAsset2 = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_vision};
-    Position visionPos2 = {3, 8};
+    Position visionPos2 = {1, 8};
     ItemMeta visionMeta2 = {&visionAsset2, &visionPos2, VISION, false};
     
     Maze mz2 = {.level = 1, .pathColor = -1, .bitmap = bitmap_maze2, .bitmapState = bitmap_mazeState2,
@@ -91,7 +90,7 @@ void game_enter() {
 
         switch (optIdx) {
             case 0: //start
-                game_start(mazes[2], &optIdx);
+                game_start(mazes[2-1], &optIdx);
                 uart_puts("> optIdx:"); uart_dec(optIdx); uart_puts("\n");
                 break;
 
@@ -166,7 +165,6 @@ void game_start(Maze *mz, int *_optIdx){
     for (int i = 0 ; i < mz->itemMetasSz; i++){
         ItemMeta *meta = mz->itemMetas[i];        
         posBeToFe(meta->pos, meta->asset);
-        embedAsset(mz, meta->asset, true);
     }
     render_scene(mz, pl->asset, isFOVShown);
     // TODO: paint breakable wall !!!
@@ -207,7 +205,7 @@ void game_start(Maze *mz, int *_optIdx){
             effect_bomb(mz, pl);
         } 
         else {
-            // spinning
+            // TODO: spinning function
             Direction dir = -1;
             for (int i = 0; i < 4; i++){
                 if (directionKey[i] == c){
@@ -216,9 +214,9 @@ void game_start(Maze *mz, int *_optIdx){
             }
             if (dir == -1) continue; 
             drawFOV(mz, pl->asset);
-            drawMoveAnimation(pl->asset, dir, 2);
+            drawMovementFrame(pl->asset, dir, 2);
             
-            // update position
+            // TODO: update position function
             Position posTmp = {pl->pos->posX, pl->pos->posY};
             update_pos(&posTmp, dir); uart_puts("-> "); debug_pos(posTmp);
             if (posTmp.posX < 0 || posTmp.posY < 0 || 

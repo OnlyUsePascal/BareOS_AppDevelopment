@@ -86,6 +86,7 @@ void game_help();
 void game_exit();
 void clearScreen();
 ItemMeta* detect_collision(Position playerPos, ItemMeta *itemMetas[], int itemMetasSz);
+void debug_item(ItemMeta itemMeta);
 
 #ifdef DEBUG
 void cli_toggle_fov();
