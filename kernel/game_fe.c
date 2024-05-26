@@ -15,7 +15,7 @@
 #define DIALOG_EXIT_MSG_SIZE 23
 
 float curDarken = 1.0f; 
-const float darkenFactor = 0.64f; 
+const float darkenFactor = 0.8f; 
 static uint16_t dialog_width = 0;
 
 
@@ -68,6 +68,11 @@ void drawAsset(const Asset *asset) {
         }
     }
 }
+
+
+// void drawAssetPartial(const Asset *asset, int centerX, int centerY) {
+    
+// }
 
 
 void embedAsset(const Maze *maze, const Asset *asset, bool fill){

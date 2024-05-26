@@ -18,7 +18,7 @@
 const char directionKey[] = {'w', 'a', 's', 'd'};
 const int yOffset[] = {-1, 0, 1, 0};
 const int xOffset[] = {0, -1, 0, 1};
-uint16_t currentRadius = 40;
+uint16_t currentRadius = LIGHT_RADIUS;
 
 
 void render_scene(const Maze *maze, const Asset *asset, const bool isFOVShown);
@@ -33,8 +33,6 @@ void game_enter() {
     // init
     framebf_init(GAME_W, GAME_H, GAME_W, GAME_H);
     framebf_drawImg(0, 0, MENU_BACKGROUND_SIZE, MENU_BACKGROUND_SIZE, bitmap_menu_background);
-    curDarken = 1.0f;
-    currentRadius = 40;
     
     // maze1
     Asset playerAsset = {ASSET_HIDDEN, ASSET_HIDDEN, PLAYER_SZ, PLAYER_SZ, bitmap_player};
@@ -50,27 +48,29 @@ void game_enter() {
                 .player = &player};
 
     // maze2
-    Asset bombAsset2 = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_bomb};
-    Position bombPos2 = {1,4}, bombWall2 = {6,7};
-    ItemMeta bombMeta2 = {&bombAsset2, &bombPos2, BOMB, false};
-    Bomb bomb2 = {&bombMeta2, &bombWall2, false};
     
     Asset visionAsset2 = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_vision};
     Position visionPos2 = {3, 8};
     ItemMeta visionMeta2 = {&visionAsset2, &visionPos2, VISION, false};
     
     Maze mz2 = {.level = 1, .pathColor = -1, .bitmap = bitmap_maze2, .bitmapState = bitmap_mazeState2,
-                .itemMetas = {&bombMeta2, &visionMeta2}, .itemMetasSz = 2, 
-                .bomb = &bomb2,
+                .itemMetas = {&visionMeta2}, .itemMetasSz = 1, 
                 .player = &player};
 
     // maze 3
-    Asset portalAsset = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_portal};
-    Position portalPos = {2, 5}, portalDes = {4,5};
-    ItemMeta portalMeta = {&portalAsset, &portalPos, PORTAL, false};
-    Portal portal = {&portalMeta, &portalDes};
-    Maze mz3 = {};
-
+    Asset bombAsset3 = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_bomb};
+    Position bombPos3 = {9,1}, bombWall3 = {8,5};
+    ItemMeta bombMeta3 = {&bombAsset3, &bombPos3, BOMB, false};
+    Bomb bomb3 = {&bombMeta3, &bombWall3, false};
+    
+    // Asset portalAsset3 = {ASSET_HIDDEN, ASSET_HIDDEN, ITEM_SZ, ITEM_SZ, bitmap_portal};
+    // Position portalPos3 = {2, 5}, portalDes3 = {4,5};
+    // ItemMeta portalMeta3 = {&portalAsset3, &portalPos3, PORTAL, false};
+    // Portal portal3 = {&portalMeta3, &portalDes3};
+    
+    Maze mz3 = {.level = 1, .pathColor = -1, .bitmap = bitmap_maze3, .bitmapState = bitmap_mazeState3,
+                .itemMetas = {&bombMeta3}, .itemMetasSz = 1, .bomb = &bomb3,
+                .player = &player};
     Maze *mazes[] = {&mz1, &mz2, &mz3};
     
     // menu
@@ -91,7 +91,7 @@ void game_enter() {
 
         switch (optIdx) {
             case 0: //start
-                game_start(mazes[1], &optIdx);
+                game_start(mazes[2], &optIdx);
                 uart_puts("> optIdx:"); uart_dec(optIdx); uart_puts("\n");
                 break;
 
@@ -137,10 +137,13 @@ void game_start(Maze *mz, int *_optIdx){
     Player *pl = mz->player;
     *_optIdx = -1;
     
-    // rseset maze
+    // reset player
     pl->pos->posX = 0; pl->pos->posY = MAZE_SZ_CELL / 2;
     pl->step = 0;
+    
+    // reset maze
     curDarken = 1;
+    currentRadius = LIGHT_RADIUS;
     getMazePathColor(mz);
     // TODO: reset item status
     for (int i = 0 ; i < mz->itemMetasSz; i++){
@@ -222,7 +225,6 @@ void game_start(Maze *mz, int *_optIdx){
                 posTmp.posX >= MAZE_SZ_CELL || posTmp.posY >= MAZE_SZ_CELL) continue;
                 
             int mazeState = mz->bitmapState[MAZE_SZ_CELL * posTmp.posY + posTmp.posX];
-            str_debug_num(mazeState);
             if (mazeState == 0) continue;
             
             // post-moving
@@ -232,7 +234,7 @@ void game_start(Maze *mz, int *_optIdx){
             
             // darken screen interval + game over
             pl->step += 1; 
-            if (pl->step % 3 == 0) {
+            if (pl->step % 7 == 0) {
                 adjustBrightness(mz, pl->asset, true);
                 if (curDarken <= LIGHT_THRESHOLD) {
                     game_over(_optIdx);
