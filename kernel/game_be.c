@@ -69,7 +69,7 @@ void game_enter() {
     Portal portal = {&portalMeta, &portalDes};
     Maze mz3 = {};
 
-    Maze *mazes[] = {&mz1, &mz2, &mz3};
+    Maze *mazes[] = {&mz2, &mz2, &mz2};
 
     
     // menu

@@ -359,10 +359,21 @@ void drawLevelTransitionText(const uint8_t levelNum) {
         );
     } else {
         uint16_t msg_level_width = font_string_width(8, FONT_WIDTH);
+        uint16_t esc_msg_width = font_string_width(32, FONT_WIDTH);
+
         font_drawString(
                 GAME_W / 2 - msg_level_width / 2,
                 GAME_H / 2 - DIALOG_HEIGHT / 2,
                 "You win!",
+                color,
+                2,
+                1
+        );
+
+        font_drawString(
+                GAME_W / 2 - esc_msg_width / 2,
+                GAME_H / 2 + DIALOG_HEIGHT / 2,
+                "Press Enter to return to menu...",
                 color,
                 2,
                 1
