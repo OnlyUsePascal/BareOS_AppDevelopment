@@ -11,14 +11,16 @@
 #define MENU_BACKGND 0xFF000B18
 #define MENU_FOREGND 0x00FFFFFF
 #define GAME_MENU_BACKGND 0x00b99ca1
-#define MAZE_SZ 440
 #define GAME_MENU_SZ_W 350
 #define GAME_MENU_SZ_H 271
+
+#define MAZE_SZ 440
+#define MAZE_SZ_CELL_PIXEL 40 
 #define ASSET_HIDDEN -1
 #define LIGHT_THRESHOLD 0.05
-#define MAZE_SZ_CELL_PIXEL 40 
+#define LIGHT_RADIUS 60
 #define PLAYER_SZ 30
-#define ITEM_SZ 20
+#define ITEM_SZ 30
 
 
 void clearScreen();
@@ -31,14 +33,11 @@ void removeFOV(const Asset *asset);
 void drawFOV(const Maze *maze, const Asset *asset);
 void drawFOVWeakWall(const Maze *mz, const Asset *asset, const Asset *weakWall);
 void drawDialog(const char *title, const char *text);
-// void removeDialog(const Position *pos);
 
 void drawMovement(Maze *maze, Asset *asset, Direction dir, ItemMeta *collidedItem);
-// void removeAsset(const Asset *asset);
 void drawAsset(const Asset *asset);
-void embedAsset(const Maze *maze, const Asset *asset, bool fill);
 void updateAssetPos(Asset *asset, int x, int y);
-void drawMoveAnimation(Asset *playerAsset, Direction dir, int order);
+void drawMovementFrame(Asset *playerAsset, Direction dir, int order);
 void posBeToFe(Position *pos, Asset *asset);
 void debugAsset(Asset asset);
 void getMazePathColor(Maze *maze);

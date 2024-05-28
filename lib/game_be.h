@@ -80,18 +80,16 @@ extern uint16_t currentRadius;
 
 void game_enter();
 int game_menu_enter();
-void game_start(Maze *mz, int *_optIdx, const uint8_t mazeIdx);
+// void game_start(Maze *mz, int *_optIdx, const uint8_t mazeIdx);
 void game_continue();
 void game_help();
 void game_exit();
 void clearScreen();
+ItemMeta* detect_collision(Position playerPos, ItemMeta *itemMetas[], int itemMetasSz);
+void debug_item(ItemMeta itemMeta);
 
 #ifdef DEBUG
 void cli_toggle_fov();
 #endif
-
-ItemMeta* detect_collision(Position playerPos, ItemMeta *itemMetas[], int itemMetasSz);
-
-
 
 #endif
