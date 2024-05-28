@@ -287,29 +287,6 @@ void drawDialog(const char *title, const char *text) {
     );
 }
 
-unsigned char getComponent(uint32_t color, int position) {
-    return (color >> position) & 0x3;
-}
-
-uint32_t interpolateColor(uint32_t startColor, uint32_t endColor, int currentStep, int totalSteps) {
-    float t = (float)currentStep / totalSteps;
-
-    unsigned char startR = getComponent(startColor, 4);
-    unsigned char startG = getComponent(startColor, 2);
-    unsigned char startB = getComponent(startColor, 0);
-
-    unsigned char endR = getComponent(endColor, 4);
-    unsigned char endG = getComponent(endColor, 2);
-    unsigned char endB = getComponent(endColor, 0);
-
-    unsigned char currentR = (unsigned char)((1 - t) * startR + t * endR);
-    unsigned char currentG = (unsigned char)((1 - t) * startG + t * endG);
-    unsigned char currentB = (unsigned char)((1 - t) * startB + t * endB);
-
-    uint32_t currentColor = (currentR << 4) | (currentG << 2) | currentB;
-    return currentColor;
-}
-
 void drawLevelTransitionText(const uint8_t levelNum) {
     uint64_t color = 0xE7E1DA;
     if (levelNum != 3) {

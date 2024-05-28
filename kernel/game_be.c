@@ -69,7 +69,7 @@ void game_enter() {
     Portal portal = {&portalMeta, &portalDes};
     Maze mz3 = {};
 
-    Maze *mazes[] = {&mz2, &mz2, &mz2};
+    Maze *mazes[] = {&mz1, &mz2, &mz2};
 
     
     // menu
@@ -94,7 +94,7 @@ void game_enter() {
                 for (int i = 0; i < 3; i++) {
                     game_start(mazes[i], &optIdx, i);
                 }
-
+                clearScreen();
                 break;
             }
 
