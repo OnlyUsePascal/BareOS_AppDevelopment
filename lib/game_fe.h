@@ -33,10 +33,8 @@ void removeFOV(const Asset *asset);
 void drawFOV(const Maze *maze, const Asset *asset);
 void drawFOVWeakWall(const Maze *mz, const Asset *asset, const Asset *weakWall);
 void drawDialog(const char *title, const char *text);
-// void removeDialog(const Position *pos);
 
 void drawMovement(Maze *maze, Asset *asset, Direction dir, ItemMeta *collidedItem);
-// void removeAsset(const Asset *asset);
 void drawAsset(const Asset *asset);
 void updateAssetPos(Asset *asset, int x, int y);
 void drawMovementFrame(Asset *playerAsset, Direction dir, int order);
@@ -46,6 +44,8 @@ void getMazePathColor(Maze *maze);
 
 void adjustBrightness(const Maze *maze, const Asset *asset, bool darken);
 uint64_t darkenPixel(uint64_t color, const float factor);
+
+void drawLevelTransitionText(const uint8_t levelNum);
 
 extern float curDarken;
 extern const float darkenFactor;

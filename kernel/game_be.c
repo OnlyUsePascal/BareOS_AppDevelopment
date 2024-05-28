@@ -22,6 +22,7 @@ uint16_t currentRadius = LIGHT_RADIUS;
 
 
 void render_scene(const Maze *maze, const Asset *asset, const bool isFOVShown);
+void game_start(Maze *mz, int *_optIdx, int *_mazeIdx);
 void debug_pos(Position pos);
 void update_pos(Position *des, Direction dir);
 void handle_collision(ItemMeta *item, Maze *maze, Player *player);
@@ -97,8 +98,9 @@ void game_enter() {
     char *opts[] = {"Start", "Choose Level", "How To Play?", "Exit"};
     int optSz = sizeof(opts) / sizeof(opts[0]);
     
-    int optIdx = -1;
+    int optIdx = -1, mazeIdx = 1;
     while (1) {
+        str_debug_num(optIdx);
         if (optIdx == -1) {
             drawMenu(menuPosX, menuPosY, yOffset, opts, 
                         optSz, MENU_FOREGND, MENU_BACKGND, true);
@@ -109,11 +111,11 @@ void game_enter() {
         }
 
         switch (optIdx) {
-            case 0: //start
-                game_start(mazes[3-1], &optIdx);
-                uart_puts("> optIdx:"); uart_dec(optIdx); uart_puts("\n");
+            case 0: {
+                game_start(mazes[mazeIdx], &optIdx, &mazeIdx);
+                uart_puts("> optIdx:"); uart_dec(optIdx); uart_puts(", maze level: "); uart_dec(mazeIdx); uart_puts("\n");
                 break;
-
+            }
             case 1: //continue
                 optIdx = -1;
                 game_continue();
@@ -150,7 +152,7 @@ int game_menu_enter() {
 }
 
 
-void game_start(Maze *mz, int *_optIdx){
+void game_start(Maze *mz, int *_optIdx, int *_mazeIdx){
     uart_puts("Starting Game...\n");
     bool isFOVShown = true;
     Player *pl = mz->player;
@@ -164,7 +166,6 @@ void game_start(Maze *mz, int *_optIdx){
     curDarken = 1;
     currentRadius = LIGHT_RADIUS;
     getMazePathColor(mz);
-    // TODO: reset item status
     for (int i = 0 ; i < mz->itemMetasSz; i++){
         ItemMeta *meta = mz->itemMetas[i];
         meta->collided = false; 
@@ -197,17 +198,18 @@ void game_start(Maze *mz, int *_optIdx){
         debug_pos(*(pl->pos));
         
         // DEBUG / screen shading
-        if(c == 'o'){
-            adjustBrightness(mz, pl->asset, true);
-        }
-        else if(c == 'p'){
-            adjustBrightness(mz, pl->asset, false);
-        } 
-        else if (c == 'k') {
-            isFOVShown = !isFOVShown;
-            render_scene(mz, pl->asset, isFOVShown);
-        }
-        else if (c == 27) { // game menu
+        // if(c == 'o'){
+        //     adjustBrightness(mz, pl->asset, true);
+        // }
+        // else if(c == 'p'){
+        //     adjustBrightness(mz, pl->asset, false);
+        // } 
+        // else if (c == 'k') {
+        //     isFOVShown = !isFOVShown;
+        //     render_scene(mz, pl->asset, isFOVShown);
+        // }
+        if (c == 27) { 
+            // pause menu
             int game_stage = game_menu_enter();   
             switch (game_stage) {
                 case 0:
@@ -219,9 +221,9 @@ void game_start(Maze *mz, int *_optIdx){
                                     MENU_BACKGROUND_SIZE, bitmap_menu_background);
                     return;
             }
-            // str_debug_num(game_stage);
         }
         else if (c == 'q'){
+            // explode wall with bomb
             effect_bomb(mz, pl);
         } 
         else {
@@ -250,7 +252,22 @@ void game_start(Maze *mz, int *_optIdx){
             update_pos(pl->pos, dir);
             ItemMeta *collidedItem = detect_collision(*(pl->pos), mz->itemMetas, mz->itemMetasSz);
             drawMovement(mz, pl->asset, dir, collidedItem);
-            
+
+            // detect end of maze
+            if (pl->pos->posX % MAZE_SZ_CELL == MAZE_SZ_CELL - 1) {
+                str_debug("end of maze reached!");
+                drawLevelTransitionText(*(_mazeIdx) + 1);
+                *_optIdx = (*(_mazeIdx) == 2) ? -1 : 0;
+                *_mazeIdx = (*(_mazeIdx) + 1) % 3;
+                
+                while (uart_getc() != '\n');
+                if (*(_mazeIdx) == 0) {
+                    clearScreen();
+                    framebf_drawImg(0, 0, MENU_BACKGROUND_SIZE, MENU_BACKGROUND_SIZE, bitmap_menu_background);
+                }
+                return;
+            }
+
             // darken screen interval + game over
             pl->step += 1; 
             if (pl->step % 7 == 0) {
@@ -328,12 +345,12 @@ void game_help() {
 void game_exit() {
     clearScreen();
     uart_puts("Exiting game...\n");
-    font_drawString(150, 150, "Ta reng Ta reng Ta reng", MENU_FOREGND, 2, 1);
+    font_drawString(150, 150, "Thank you for playing <3", MENU_FOREGND, 2, 1);
 }
 
 
 void game_over(int *_optIdx) {
-    str_debug("game over :(");
+    str_debug("Game Over :(");
     wait_msec(1000000);
     clearScreen(); 
     

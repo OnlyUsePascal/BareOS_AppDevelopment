@@ -80,7 +80,7 @@ extern uint16_t currentRadius;
 
 void game_enter();
 int game_menu_enter();
-void game_start(Maze *mz, int *_optIdx);
+// void game_start(Maze *mz, int *_optIdx, const uint8_t mazeIdx);
 void game_continue();
 void game_help();
 void game_exit();
